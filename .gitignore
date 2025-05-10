@@ -1,0 +1,9 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/.vs
+/CMD_online_chatroom.sln
+/CMD_online_chatroom.vcxproj
+/CMD_online_chatroom.vcxproj.filters
+/CMD_online_chatroom.vcxproj.user
