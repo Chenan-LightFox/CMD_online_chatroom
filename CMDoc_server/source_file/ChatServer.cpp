@@ -37,29 +37,17 @@ void ChatServer::start() {
 
 	std::cout << "Server started on port " << port << std::endl;
 
-	SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
-	if (clientSocket == INVALID_SOCKET) {
-		std::cerr << "Accept failed" << std::endl;
-		closesocket(serverSocket);
-		WSACleanup();
-		return;
+	while (true) {
+		SOCKET clientSocket = accept(serverSocket, NULL, NULL);
+		if (clientSocket == INVALID_SOCKET) {
+			std::cerr << "Accept failed. Error: " << WSAGetLastError() << std::endl;
+			continue;
+		}
+		std::thread(&ChatServer::handleClient, this, clientSocket).detach();
 	}
-
-	std::cout << "Client connected" << std::endl;
-
-	char buffer[1024];
-	int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-	if (bytesReceived > 0) {
-		buffer[bytesReceived] = '\0';
-		std::cout << "Received message: " << buffer << std::endl;
-	}
-
-	closesocket(clientSocket);
-	closesocket(serverSocket);
-	WSACleanup();
 }
 
-void handleClient(SOCKET clientSocket) {
+void ChatServer::handleClient(SOCKET clientSocket) {
 	char buffer[1024];
 	int result;
 	while ((result = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0) {

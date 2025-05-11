@@ -18,7 +18,6 @@ public:
 
 	void start();
 	// void stop();
-	// void sendMessage(const std::string& message);
-	// void receiveMessage(std::string& message);
 
+	void handleClient(SOCKET clientSocket);
 };
