@@ -1,12 +1,13 @@
+#pragma once
 #include "../header_file/MessagePacket.h"
-#include <atomic>
 #include <map>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <mutex>
+
 
 class ChatClient {
   private:
@@ -14,7 +15,8 @@ class ChatClient {
     std::string ip;
     short port;
     std::mutex cout_mutex;
-    
+    std::thread clientThread;
+
   public:
     ChatClient(std::string ip, int port) : ip(ip), port(port) {};
     ~ChatClient() {
@@ -24,5 +26,8 @@ class ChatClient {
 
     void start();
     void stop();
+    void test(MessagePacket packet) {
+        send(clientSocket, (char *)&packet, sizeof(packet), 0);
+    }
     void receiveLoop(SOCKET);
 };

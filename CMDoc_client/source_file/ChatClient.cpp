@@ -1,15 +1,14 @@
 #include "../header_file/ChatClient.h"
-#include<iostream>
-
+#include <iostream>
 
 void ChatClient::receiveLoop(SOCKET clientSocket) {
-    MessagePacket packet;
+    MessagePacket packet{};
     while (true) {
         int ret = recv(clientSocket, reinterpret_cast<char *>(&packet),
                        sizeof(packet), 0);
         if (ret <= 0)
             break;
-        std::cout << "[" << packet.sender << "] " << packet.content << "\n";
+        std::cout << packet.content << "\n";
     }
 }
 void ChatClient::start() {
@@ -23,7 +22,9 @@ void ChatClient::start() {
     inet_pton(AF_INET, ip.c_str(), &serverAddr.sin_addr);
     serverAddr.sin_port = htons(port);
 
-    connect(clientSocket, (sockaddr *)&serverAddr, sizeof(serverAddr));//TODO:异常处理
+    connect(clientSocket, (sockaddr *)&serverAddr,
+            sizeof(serverAddr)); // TODO:异常处理
 
-    std::thread([&]() { this->receiveLoop(clientSocket); }, clientSocket).detach();
+    clientThread = std::thread([&]() { this->receiveLoop(clientSocket); });
+    clientThread.detach();
 }
