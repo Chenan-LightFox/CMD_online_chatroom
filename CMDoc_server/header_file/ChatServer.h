@@ -22,10 +22,6 @@ private:
 	std::map<SOCKET, User*> onlineUsers;
 public:
 	ChatServer(int _port) : port(_port) {};
-	~ChatServer() {
-		closesocket(serverSocket);
-		WSACleanup();
-	}
 
 	void start();
 	void stop();

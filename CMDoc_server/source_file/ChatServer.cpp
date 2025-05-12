@@ -3,31 +3,39 @@
 
 extern std::mutex cout_mutex;
 
+void send_to_client(SOCKET clientSocket, const std::string& message) {
+    MessagePacket reply;
+    reply.set("SERVER", "Registration successful.\n");
+    std::string msg = reply.serialize();
+    send(clientSocket, msg.c_str(), msg.size(), 0);
+}
+
 void ChatServer::handle_client_command(SOCKET clientSocket) {
 	User* user = onlineUsers[clientSocket];
 
 	// Get the content of the command
-	char buffer[1024];
-	int result = recv(clientSocket, buffer, sizeof(buffer), 0);
-	if (result <= 0) return;
+    char buffer[sizeof(MessagePacket)];
+    int result = recv(clientSocket, buffer, sizeof(buffer), 0);
+    if (result <= 0) {
+        closesocket(clientSocket);
+        return;
+    }
+    MessagePacket packet = MessagePacket::deserialize(buffer, result);
+    std::string input(packet.content);
 
 	std::string command(buffer, result);
 
 	// Handle the command
 	if (command == "/help") {
-		std::string helpText = "Available commands:\n"
-			"/help - show this help\n"
-			"/usrname - display your username\n";
-		send(clientSocket, helpText.c_str(), helpText.size(), 0);
+		send_to_client(clientSocket, "Available commands:\n/help - show this help\n/usrname - display your username\n");
 		PrintInfo(user->username + "executed command /help");
 	}
 	else if (command == "/usrname") {
-		std::string reply = "You are: " + user->username + "\n";
-		send(clientSocket, reply.c_str(), reply.size(), 0);
+        send_to_client(clientSocket, "You are: " + user->username + "\n");
 		PrintInfo(user->username + " executed command /usrname");
 	}
 	else {
-		send(clientSocket, "Unknown command.\n", 18, 0);
+		send_to_client(clientSocket, "Unknown command.\n");
 		PrintInfo(user->username + " sent an unknown command: " + command);
 	}
 }
@@ -95,12 +103,7 @@ void ChatServer::handleClient(SOCKET clientSocket) {
 	int result;
 
 	// Send message when the client connects
-	send(clientSocket, "Welcome! Please register or login.\nType '/register' or '/login':\nType '/help' for help.\n", 89, 0);
-	result = recv(clientSocket, reinterpret_cast<char*>(&packet), sizeof(packet), 0);
-	if (result <= 0) { // Check if the client is unconnected or errors
-		closesocket(clientSocket); // Then close the socket
-		return;
-	}
+    send_to_client(clientSocket, "Welcome! Please register or login.\nType '/register' or '/login':\nType '/help' for help.\n");
 
 	// Process the command
 	std::string input(packet.content, result);
@@ -110,28 +113,28 @@ void ChatServer::handleClient(SOCKET clientSocket) {
 
 	if (command == "/register") {
 		if (registeredUsers.count(username)) { // Check if the username already exists
-			send(clientSocket, "Username already exists.\n", 26, 0);
+			send_to_client(clientSocket, "Username already exists.\n");
 			closesocket(clientSocket);
 			return;
 		}
 		User* newUser = new User(username, password);
 		registeredUsers[username] = newUser;
 		onlineUsers[clientSocket] = newUser;
-		send(clientSocket, "Registration successful.\n", 26, 0);
+		send_to_client(clientSocket, "Registration successful.\n");
 		PrintInfo("New user registered: " + username);
 	}
 	else if (command == "/login") {
 		if (!registeredUsers.count(username) || registeredUsers[username]->password != password) { // Check if the username exists and password is correct
-			send(clientSocket, "Invalid username or password.\n", 31, 0);
+			send_to_client(clientSocket, "Invalid username or password.\n");
 			closesocket(clientSocket);
 			return;
 		}
 		onlineUsers[clientSocket] = registeredUsers[username];
-		send(clientSocket, "Login successful.\n", 19, 0);
+		send_to_client(clientSocket, "Login successful.\n");
 		PrintInfo("User logged in: " + username);
 	}
 	else {
-		send(clientSocket, "Unknown command.\n", 18, 0);
+		send_to_client(clientSocket, "Unknown command.\n");
 		closesocket(clientSocket);
 		return;
 	}
@@ -145,7 +148,7 @@ void ChatServer::handleClient(SOCKET clientSocket) {
 				continue;
 			}
 			PrintInfo("[" + onlineUsers[clientSocket]->username + "] " + msg);
-			send(clientSocket, reinterpret_cast<char*>(&packet), result, 0);
+			send_to_client(clientSocket, reinterpret_cast<char*>(&packet));
 		}
 		if (result == SOCKET_ERROR) {
 			PrintError("recv failed: " + std::to_string(WSAGetLastError()));
