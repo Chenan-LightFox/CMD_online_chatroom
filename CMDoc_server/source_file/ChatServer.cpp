@@ -105,7 +105,7 @@ void ChatServer::start() {
 
 void ChatServer::handleClient(SOCKET clientSocket) {
     MessagePacket packet;
-    int result;
+    int result = recv(clientSocket, reinterpret_cast<char *>(&packet), sizeof(packet), 0);
 
     // Send message when the client connects
     send_to_client(clientSocket,
@@ -113,7 +113,7 @@ void ChatServer::handleClient(SOCKET clientSocket) {
                    "'/login':\nType '/help' for help.\n");
 
     // Process the command
-    std::string input(packet.content, result);
+    std::string input(packet.content);
     std::istringstream iss(input);
     std::string command, username, password;
     iss >> command >> username >> password;
