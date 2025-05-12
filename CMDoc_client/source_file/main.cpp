@@ -4,6 +4,9 @@
 #include <string.h>
 #include <string>
 #pragma comment(lib, "ws2_32.lib")
+
+std::mutex cout_mutex;
+
 int main() {
     ChatClient client("127.0.0.1", 8080);
     client.start();
@@ -13,5 +16,6 @@ int main() {
         strcpy_s(package.sender, message.c_str());
         client.test(package);
     }
+    client.stop();
     return 0;
 }

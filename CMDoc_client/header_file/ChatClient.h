@@ -8,13 +8,12 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-
+extern std::mutex cout_mutex;
 class ChatClient {
   private:
     SOCKET clientSocket;
     std::string ip;
     short port;
-    std::mutex cout_mutex;
     std::thread clientThread;
 
   public:

@@ -1,5 +1,6 @@
 #include "../header_file/ChatClient.h"
 #include <iostream>
+#include <string>
 
 void ChatClient::receiveLoop(SOCKET clientSocket) {
     MessagePacket packet{};
@@ -8,7 +9,18 @@ void ChatClient::receiveLoop(SOCKET clientSocket) {
                        sizeof(packet), 0);
         if (ret <= 0)
             break;
-        std::cout << packet.content << "\n";
+        tm localtime{};
+        localtime_s(&localtime, &packet.timestamp);
+        std::string timestr=
+            std::to_string(localtime.tm_hour) + ":" +
+            std::to_string(localtime.tm_min) + ":" +
+            std::to_string(localtime.tm_sec);
+        {
+            std::lock_guard<std::mutex> lock(cout_mutex);
+            std::cout << "[" << packet.sender << "] ";
+            std::cout << timestr << ": ";
+            std::cout << packet.content << std::endl;
+        }
     }
 }
 void ChatClient::start() {
@@ -22,9 +34,12 @@ void ChatClient::start() {
     inet_pton(AF_INET, ip.c_str(), &serverAddr.sin_addr);
     serverAddr.sin_port = htons(port);
 
-    connect(clientSocket, (sockaddr *)&serverAddr,
-            sizeof(serverAddr)); // TODO:异常处理
+    if (connect(clientSocket, (sockaddr *)&serverAddr, sizeof(serverAddr))) {
+        std::cerr << "Connection failed\n";
+        return;
+    }
 
     clientThread = std::thread([&]() { this->receiveLoop(clientSocket); });
     clientThread.detach();
 }
+void ChatClient::stop() {}
