@@ -1,5 +1,6 @@
 #include "../header_file/ChatServer.h"
 #include "../header_file/PrintLog.h"
+#include <string.h>
 
 extern std::mutex cout_mutex;
 
@@ -93,9 +94,10 @@ void ChatServer::start() {
 void ChatServer::handleClient(SOCKET clientSocket) {
 	MessagePacket packet;
 	int result;
-
+	
 	// Send message when the client connects
-	send(clientSocket, "Welcome! Please register or login.\nType '/register' or '/login':\nType '/help' for help.\n", 89, 0);
+	strcpy_s(packet.content,"Welcome! Please register or login.\nType '/register' or '/login':\nType '/help' for help.\n");
+	send(clientSocket, reinterpret_cast<char*>(&packet), sizeof(packet), 0);
 	result = recv(clientSocket, reinterpret_cast<char*>(&packet), sizeof(packet), 0);
 	if (result <= 0) { // Check if the client is unconnected or errors
 		closesocket(clientSocket); // Then close the socket

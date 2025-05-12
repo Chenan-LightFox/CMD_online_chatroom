@@ -9,5 +9,5 @@ project(CMD_ONLINE_CHATROOM)
 # - 参数1 是用来指定需要索引的源文件目录 
 # - 参数2 用来指定项目的名称
  
-add_subdirectory(Server CMDoc_server)
-#add_subdirectory(Client CMDoc_client)
+add_subdirectory(CMDoc_server CMDoc_server)
+add_subdirectory(CMDoc_client CMDoc_client)
