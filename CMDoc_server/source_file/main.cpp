@@ -9,7 +9,7 @@
 std::mutex cout_mutex;
 
 int main() {
-    ChatServer server(8080); // todo: read port from config file
+    ChatServer server(8088); // todo: read port from config file
     std::thread serverThread([&server]() { server.start(); });
 
     // Get command
