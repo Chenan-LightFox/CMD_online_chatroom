@@ -1,6 +1,6 @@
 #include "../header_file/Chatroom.h"
 
-std::mutex cout_mutex;
+extern std::mutex cout_mutex;
 
 void ChatRoom::broadcast(const std::string& message) {
     std::lock_guard<std::mutex> lock(cout_mutex);
