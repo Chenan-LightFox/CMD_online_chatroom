@@ -10,6 +10,7 @@
 #include <vector>
 #include <map>
 #include "../header_file/User.h"
+#include "../header_file/MessagePacket.h"
 
 class ChatServer {
 private:
@@ -21,7 +22,7 @@ private:
 	std::map<SOCKET, User*> onlineUsers;
 public:
 	ChatServer(int _port) : port(_port) {};
-	ChatServer::~ChatServer() {
+	~ChatServer() {
 		closesocket(serverSocket);
 		WSACleanup();
 	}

@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.15)
 #生成的子项目名称
 project (CMDoc_server) 
  

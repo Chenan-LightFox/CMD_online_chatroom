@@ -91,19 +91,19 @@ void ChatServer::start() {
 }
 
 void ChatServer::handleClient(SOCKET clientSocket) {
-	char buffer[1024];
+	MessagePacket packet;
 	int result;
 
 	// Send message when the client connects
 	send(clientSocket, "Welcome! Please register or login.\nType '/register' or '/login':\nType '/help' for help.\n", 89, 0);
-	result = recv(clientSocket, buffer, sizeof(buffer), 0);
+	result = recv(clientSocket, reinterpret_cast<char*>(&packet), sizeof(packet), 0);
 	if (result <= 0) { // Check if the client is unconnected or errors
 		closesocket(clientSocket); // Then close the socket
 		return;
 	}
 
 	// Process the command
-	std::string input(buffer, result);
+	std::string input(packet.content, result);
 	std::istringstream iss(input);
 	std::string command, username, password;
 	iss >> command >> username >> password;
@@ -137,15 +137,15 @@ void ChatServer::handleClient(SOCKET clientSocket) {
 	}
 
 	try {
-		while ((result = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0) {
+		while ((result = recv(clientSocket, reinterpret_cast<char*>(&packet), sizeof(packet), 0)) > 0) {
 			std::lock_guard<std::mutex> lock(cout_mutex);
-			std::string msg(buffer, result);
+			std::string msg(packet.content, result);
 			if (msg[0] == '/') { // Check if the message is a command
 				handle_client_command(clientSocket);
 				continue;
 			}
 			PrintInfo("[" + onlineUsers[clientSocket]->username + "] " + msg);
-			send(clientSocket, buffer, result, 0);
+			send(clientSocket, reinterpret_cast<char*>(&packet), result, 0);
 		}
 		if (result == SOCKET_ERROR) {
 			PrintError("recv failed: " + std::to_string(WSAGetLastError()));
