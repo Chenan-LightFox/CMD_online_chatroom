@@ -16,9 +16,9 @@ void ChatClient::receiveLoop(SOCKET clientSocket) {
             std::to_string(localtime.tm_min) + ":" +
             std::to_string(localtime.tm_sec);
         {
-            //std::lock_guard<std::mutex> lock(cout_mutex);
+            std::lock_guard<std::mutex> lock(cout_mutex);
             std::cout << "[" << packet.sender << "] ";
-            std::cout << timestr << ": ";
+            std::cout << timestr << ": \n";
             std::cout << packet.content << std::endl;
         }
     }
