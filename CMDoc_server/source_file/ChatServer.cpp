@@ -3,6 +3,35 @@
 
 extern std::mutex cout_mutex;
 
+void ChatServer::handle_client_command(SOCKET clientSocket) {
+	User* user = onlineUsers[clientSocket];
+
+	// Get the content of the command
+	char buffer[1024];
+	int result = recv(clientSocket, buffer, sizeof(buffer), 0);
+	if (result <= 0) return;
+
+	std::string command(buffer, result);
+
+	// Handle the command
+	if (command == "/help") {
+		std::string helpText = "Available commands:\n"
+			"/help - show this help\n"
+			"/usrname - display your username\n";
+		send(clientSocket, helpText.c_str(), helpText.size(), 0);
+		PrintInfo(user->username + "executed command /help");
+	}
+	else if (command == "/usrname") {
+		std::string reply = "You are: " + user->username + "\n";
+		send(clientSocket, reply.c_str(), reply.size(), 0);
+		PrintInfo(user->username + " executed command /usrname");
+	}
+	else {
+		send(clientSocket, "Unknown command.\n", 18, 0);
+		PrintInfo(user->username + " sent an unknown command: " + command);
+	}
+}
+
 void ChatServer::start() {
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -64,10 +93,58 @@ void ChatServer::start() {
 void ChatServer::handleClient(SOCKET clientSocket) {
 	char buffer[1024];
 	int result;
+
+	// Send message when the client connects
+	send(clientSocket, "Welcome! Please register or login.\nType '/register' or '/login':\nType '/help' for help.\n", 89, 0);
+	result = recv(clientSocket, buffer, sizeof(buffer), 0);
+	if (result <= 0) { // Check if the client is unconnected or errors
+		closesocket(clientSocket); // Then close the socket
+		return;
+	}
+
+	// Process the command
+	std::string input(buffer, result);
+	std::istringstream iss(input);
+	std::string command, username, password;
+	iss >> command >> username >> password;
+
+	if (command == "/register") {
+		if (registeredUsers.count(username)) { // Check if the username already exists
+			send(clientSocket, "Username already exists.\n", 26, 0);
+			closesocket(clientSocket);
+			return;
+		}
+		User* newUser = new User(username, password);
+		registeredUsers[username] = newUser;
+		onlineUsers[clientSocket] = newUser;
+		send(clientSocket, "Registration successful.\n", 26, 0);
+		PrintInfo("New user registered: " + username);
+	}
+	else if (command == "/login") {
+		if (!registeredUsers.count(username) || registeredUsers[username]->password != password) { // Check if the username exists and password is correct
+			send(clientSocket, "Invalid username or password.\n", 31, 0);
+			closesocket(clientSocket);
+			return;
+		}
+		onlineUsers[clientSocket] = registeredUsers[username];
+		send(clientSocket, "Login successful.\n", 19, 0);
+		PrintInfo("User logged in: " + username);
+	}
+	else {
+		send(clientSocket, "Unknown command.\n", 18, 0);
+		closesocket(clientSocket);
+		return;
+	}
+
 	try {
 		while ((result = recv(clientSocket, buffer, sizeof(buffer), 0)) > 0) {
 			std::lock_guard<std::mutex> lock(cout_mutex);
-			PrintInfo("Received message: " + std::string(buffer, result));
+			std::string msg(buffer, result);
+			if (msg[0] == '/') { // Check if the message is a command
+				handle_client_command(clientSocket);
+				continue;
+			}
+			PrintInfo("[" + onlineUsers[clientSocket]->username + "] " + msg);
 			send(clientSocket, buffer, result, 0);
 		}
 		if (result == SOCKET_ERROR) {
@@ -77,6 +154,11 @@ void ChatServer::handleClient(SOCKET clientSocket) {
 		PrintError("Exception in handleClient: " + std::string(e.what()));
 	} catch (...) {
 		PrintError("Unknown error in handleClient.");
+	}
+
+	if (onlineUsers.count(clientSocket)) {
+		PrintInfo("User disconnected: " + onlineUsers[clientSocket]->username);
+		onlineUsers.erase(clientSocket);
 	}
 	closesocket(clientSocket);
 }
