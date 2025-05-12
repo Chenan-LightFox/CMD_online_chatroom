@@ -8,12 +8,11 @@
 std::mutex cout_mutex;
 
 int main() {
-    ChatClient client("127.0.0.1", 8080);
+    ChatClient client("127.0.0.1", 8088);
     client.start();
     std::string message;
     while (std::getline(std::cin, message)) {
-        MessagePacket package;
-        strcpy_s(package.sender, message.c_str());
+        MessagePacket package{"", message};
         client.test(package);
     }
     client.stop();

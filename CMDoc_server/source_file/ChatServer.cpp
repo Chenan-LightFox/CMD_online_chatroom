@@ -1,30 +1,30 @@
 #include "../header_file/ChatServer.h"
 #include "../header_file/PrintLog.h"
 #include <string.h>
-
+#define PrintError(msg)                                                        \
+    PrintError("[LINE " + std::to_string(__LINE__) + "]:" + msg)
 extern std::mutex cout_mutex;
 
 void send_to_client(SOCKET clientSocket, const std::string &message) {
-    MessagePacket reply;
-    reply.set("SERVER", "Registration successful.\n");
-    std::string msg = reply.serialize();
-    send(clientSocket, msg.c_str(), msg.size(), 0);
+    MessagePacket reply("SERVER", message);
+    send(clientSocket, reinterpret_cast<char *>(&reply), sizeof(reply), 0);
 }
 
 void ChatServer::handle_client_command(SOCKET clientSocket) {
     User *user = onlineUsers[clientSocket];
 
     // Get the content of the command
-    char buffer[sizeof(MessagePacket)];
-    int result = recv(clientSocket, buffer, sizeof(buffer), 0);
+    MessagePacket packet;
+    int result = recv(clientSocket, reinterpret_cast<char *>(&packet),
+                      sizeof(packet), 0);
     if (result <= 0) {
         closesocket(clientSocket);
         return;
     }
-    MessagePacket packet = MessagePacket::deserialize(buffer, result);
     std::string input(packet.content);
-
-    std::string command(buffer, result);
+    std::istringstream iss(input);
+    std::string command;
+    iss >> command;
 
     // Handle the command
     if (command == "/help") {
@@ -104,20 +104,19 @@ void ChatServer::start() {
 }
 
 void ChatServer::handleClient(SOCKET clientSocket) {
-    MessagePacket packet;
-    int result = recv(clientSocket, reinterpret_cast<char *>(&packet), sizeof(packet), 0);
-
     // Send message when the client connects
     send_to_client(clientSocket,
                    "Welcome! Please register or login.\nType '/register' or "
                    "'/login':\nType '/help' for help.\n");
-
+    PrintInfo("Say hello to the new client.");
+    MessagePacket packet;
+    int result = recv(clientSocket, reinterpret_cast<char *>(&packet),
+                      sizeof(packet), 0);
     // Process the command
     std::string input(packet.content);
     std::istringstream iss(input);
     std::string command, username, password;
     iss >> command >> username >> password;
-
     if (command == "/register") {
         if (registeredUsers.count(
                 username)) { // Check if the username already exists
@@ -151,14 +150,13 @@ void ChatServer::handleClient(SOCKET clientSocket) {
     try {
         while ((result = recv(clientSocket, reinterpret_cast<char *>(&packet),
                               sizeof(packet), 0)) > 0) {
-            std::lock_guard<std::mutex> lock(cout_mutex);
-            std::string msg(packet.content, result);
+            std::string msg = packet.content;
             if (msg[0] == '/') { // Check if the message is a command
                 handle_client_command(clientSocket);
                 continue;
             }
             PrintInfo("[" + onlineUsers[clientSocket]->username + "] " + msg);
-            send_to_client(clientSocket, reinterpret_cast<char *>(&packet));
+            send_to_client(clientSocket, packet.content);
         }
         if (result == SOCKET_ERROR) {
             PrintError("recv failed: " + std::to_string(WSAGetLastError()));

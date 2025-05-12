@@ -26,7 +26,7 @@ class ChatClient {
     void start();
     void stop();
     void test(MessagePacket packet) {
-        send(clientSocket, (char *)&packet, sizeof(packet), 0);
+        send(clientSocket, reinterpret_cast<char*>(&packet), sizeof(packet), 0);
     }
     void receiveLoop(SOCKET);
 };

@@ -1,31 +1,35 @@
 #pragma once
 
-#include <winsock2.h>
-#include <string>
-#include <iostream>
-#include <sstream>
-#include <mutex>
-#include <thread>
-#include <atomic>
-#include <vector>
-#include <map>
-#include "../header_file/User.h"
 #include "../header_file/MessagePacket.h"
+#include "../header_file/User.h"
+#include <atomic>
+#include <iostream>
+#include <map>
+#include <mutex>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <vector>
+#include <winsock2.h>
+
+
+
 
 class ChatServer {
-private:
-	SOCKET serverSocket;
-	int port;
-	std::atomic<bool> running;
-	std::vector<std::thread> threads;
-	std::map<std::string, User*> registeredUsers;
-	std::map<SOCKET, User*> onlineUsers;
-public:
-	ChatServer(int _port) : port(_port) {};
+  private:
+    SOCKET serverSocket;
+    int port;
+    std::atomic<bool> running;
+    std::vector<std::thread> threads;
+    std::map<std::string, User *> registeredUsers;
+    std::map<SOCKET, User *> onlineUsers;
 
-	void start();
-	void stop();
+  public:
+    ChatServer(int _port) : port(_port) {};
 
-	void handleClient(SOCKET clientSocket);
-	void handle_client_command(SOCKET clientSocket);
+    void start();
+    void stop();
+
+    void handleClient(SOCKET clientSocket);
+    void handle_client_command(SOCKET clientSocket);
 };

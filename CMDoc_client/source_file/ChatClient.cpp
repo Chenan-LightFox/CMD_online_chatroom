@@ -16,7 +16,7 @@ void ChatClient::receiveLoop(SOCKET clientSocket) {
             std::to_string(localtime.tm_min) + ":" +
             std::to_string(localtime.tm_sec);
         {
-            std::lock_guard<std::mutex> lock(cout_mutex);
+            //std::lock_guard<std::mutex> lock(cout_mutex);
             std::cout << "[" << packet.sender << "] ";
             std::cout << timestr << ": ";
             std::cout << packet.content << std::endl;
@@ -38,7 +38,7 @@ void ChatClient::start() {
         std::cerr << "Connection failed\n";
         return;
     }
-
+    std::cout << "Connected to server\n";
     clientThread = std::thread([&]() { this->receiveLoop(clientSocket); });
     clientThread.detach();
 }
