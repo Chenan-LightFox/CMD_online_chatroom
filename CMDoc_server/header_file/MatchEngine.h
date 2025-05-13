@@ -1,13 +1,32 @@
 #pragma once
 
-#include <vector>
 #include "Chatroom.h"
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
 
 class MatchEngine {
-private:
-    std::vector<ChatRoom *> rooms;
+  public:
+    ChatRoom *matchUserToRoom(User *user);
+};
+
+class Tokenizer {
+  private:
+    std::set<std::string> dict;
 
   public:
-    MatchEngine();
-    ChatRoom* matchUserToRoom(User* user);
+    std::vector<std::string> fmmTokenizer(const std::string &str);
 };
+
+class FeatureExtractor {
+  private:
+  public:
+    static std::map<std::string, std::vector<double>>
+    extractFeatures(const std::vector<std::string> &chats,
+                    const std::vector<std::string> &keywords);
+};
+
+class Normalizer {};
+
+class Similarity {};
