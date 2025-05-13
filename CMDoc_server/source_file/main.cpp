@@ -6,7 +6,7 @@
 
 
 #pragma comment(lib, "ws2_32.lib")
-std::mutex cout_mutex;
+extern std::mutex cout_mutex;
 
 int main() {
     ChatServer server(8088); // todo: read port from config file
