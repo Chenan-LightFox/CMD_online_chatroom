@@ -20,9 +20,9 @@ int main() {
             server.stop();
             break;
         } else if (cmd == "help") {
-            PrintInfo("Available commands: stop, help");
+            printInfo("Available commands: stop, help");
         } else {
-            PrintWarning("Unknown command: " + cmd +
+            printWarning("Unknown command: " + cmd +
                          ". Type 'help' for available commands.");
         }
     }

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <vector>
 extern std::mutex cout_mutex;
-
+std::vector<ChatRoom> rooms;
 
 void ChatServer::sendToClient(SOCKET clientSocket, const MessagePacket &message) {
     MessagePacket msg=message;
@@ -80,7 +80,8 @@ void ChatServer::start() {
 
     running = true; // Set server state to running
     printInfo("Server started on port " + std::to_string(port));
-
+    
+    rooms.push_back(ChatRoom("Lobby"));
     while (running) {
         if (!running)
             break; // Check if server is still running before accepting new
@@ -152,8 +153,7 @@ void ChatServer::handleClient(SOCKET clientSocket) {
         return;
     }
 
-    std::vector<ChatRoom> rooms;
-    rooms.push_back(ChatRoom("Lobby"));
+    User *user = onlineUsers[clientSocket];
 
     try { // The message loop
         while ((result = recv(clientSocket, reinterpret_cast<char *>(&packet),
@@ -164,7 +164,6 @@ void ChatServer::handleClient(SOCKET clientSocket) {
                 continue;
             }
             printInfo("<" + onlineUsers[clientSocket]->username + "> " + msg);
-            User *user = onlineUsers[clientSocket];
             rooms[user->joinedRoom].broadcast(packet); // Broadcast message to users
         }
         if (result == SOCKET_ERROR) {
@@ -180,6 +179,8 @@ void ChatServer::handleClient(SOCKET clientSocket) {
         printInfo("User disconnected: " + onlineUsers[clientSocket]->username);
         onlineUsers.erase(clientSocket);
     }
+    rooms[user->joinedRoom].users.erase(user);
+    onlineUsers.erase(clientSocket);
     closesocket(clientSocket);
 }
 

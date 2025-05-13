@@ -1,15 +1,20 @@
 #pragma once
 
-#include <string>
+#include "MessagePacket.h"
 #include <set>
+#include <string>
+#include <vector>
+#include <winsock2.h>
 
 class User {
-public:
+  public:
     std::string username;
     std::string password;
+
+    std::vector<MessagePacket> recentMessages;
     int joinedRoom = 0;
-    int socket = -1;
-
-    User(std::string uname, std::string pwd) : username(uname), password(pwd) {}
-
+    SOCKET socket;
+    bool isConnected;
+    User(std::string uname, std::string pwd)
+        : username(uname), password(pwd), isConnected(true) {}
 };
