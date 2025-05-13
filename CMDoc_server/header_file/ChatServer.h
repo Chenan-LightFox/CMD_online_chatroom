@@ -12,9 +12,6 @@
 #include <vector>
 #include <winsock2.h>
 
-
-
-
 class ChatServer {
   private:
     SOCKET serverSocket;
@@ -32,4 +29,5 @@ class ChatServer {
 
     void handleClient(SOCKET clientSocket);
     void handle_client_command(SOCKET clientSocket);
+    static void send_to_client(SOCKET clientSocket, const std::string &message);
 };

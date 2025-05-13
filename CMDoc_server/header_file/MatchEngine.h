@@ -4,6 +4,10 @@
 #include "Chatroom.h"
 
 class MatchEngine {
-public:
+private:
+    std::vector<ChatRoom *> rooms;
+
+  public:
+    MatchEngine();
     ChatRoom* matchUserToRoom(User* user);
 };

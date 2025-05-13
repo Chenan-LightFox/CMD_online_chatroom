@@ -1,12 +1,11 @@
 #include "../header_file/ChatServer.h"
 #include "../header_file/PrintLog.h"
 #include <string.h>
-#define PrintError(msg)                                                        \
-    PrintError("[LINE " + std::to_string(__LINE__) + "]:" + msg)
 extern std::mutex cout_mutex;
 
-void send_to_client(SOCKET clientSocket, const std::string &message) {
+void ChatServer::send_to_client(SOCKET clientSocket, const std::string &message) {
     MessagePacket reply("SERVER", message);
+    reply.timestamp = time(nullptr);
     send(clientSocket, reinterpret_cast<char *>(&reply), sizeof(reply), 0);
 }
 
@@ -147,7 +146,7 @@ void ChatServer::handleClient(SOCKET clientSocket) {
         return;
     }
 
-    try {
+    try { // The message loop
         while ((result = recv(clientSocket, reinterpret_cast<char *>(&packet),
                               sizeof(packet), 0)) > 0) {
             std::string msg = packet.content;
@@ -155,8 +154,11 @@ void ChatServer::handleClient(SOCKET clientSocket) {
                 handle_client_command(clientSocket);
                 continue;
             }
-            PrintInfo("[" + onlineUsers[clientSocket]->username + "] " + msg);
-            send_to_client(clientSocket, packet.content);
+            PrintInfo("<" + onlineUsers[clientSocket]->username + "> " + msg);
+            User *user = onlineUsers[clientSocket];
+            if (user->joinedRoom) {
+                user->joinedRoom->broadcast(msg, user->username); // Broadcast message to users
+            }
         }
         if (result == SOCKET_ERROR) {
             PrintError("recv failed: " + std::to_string(WSAGetLastError()));

@@ -19,5 +19,5 @@ public:
         users.push_back(user);
     }
 
-    void broadcast(const std::string& message);
+    void broadcast(const std::string& sender, const std::string& message);
 };
