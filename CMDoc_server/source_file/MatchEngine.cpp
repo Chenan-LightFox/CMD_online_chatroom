@@ -1,5 +1,5 @@
 #include "../header_file/MatchEngine.h"
-
+/*
 std::vector<ChatRoom*> rooms;
 
 MatchEngine::MatchEngine() {
@@ -24,3 +24,4 @@ ChatRoom* MatchEngine::matchUserToRoom(User* user) {
     user->joinedRoom = rooms[0];
     return rooms[0];
 }
+*/

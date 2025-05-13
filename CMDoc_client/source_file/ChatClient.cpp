@@ -35,10 +35,10 @@ void ChatClient::start() {
     serverAddr.sin_port = htons(port);
 
     if (connect(clientSocket, (sockaddr *)&serverAddr, sizeof(serverAddr))) {
-        PrintError("Connection failed\n");
+        printError("Connection failed\n");
         return;
     }
-    PrintInfo("Connected to server\n");
+    printInfo("Connected to server\n");
     clientThread = std::thread([&]() { this->receiveLoop(clientSocket); });
     clientThread.detach();
 }

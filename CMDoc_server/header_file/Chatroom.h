@@ -5,19 +5,19 @@
 #include <set>
 #include <iostream>
 #include <mutex>
+#include "MessagePacket.h"
 #include "User.h"
 
 class ChatRoom {
 public:
     std::string roomName;
-    std::set<std::string> topicTags;
-    std::vector<User*> users;
+    std::set<User*> users;
 
-    ChatRoom(std::string name, std::set<std::string> tags) : roomName(name), topicTags(tags) {}
+    ChatRoom(std::string name) : roomName(name) {}
 
     void addUser(User* user) {
-        users.push_back(user);
+        users.insert(user);
     }
 
-    void broadcast(const std::string& sender, const std::string& message);
+    void broadcast(const MessagePacket& message);
 };

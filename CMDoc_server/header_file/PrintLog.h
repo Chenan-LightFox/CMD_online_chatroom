@@ -6,14 +6,14 @@
 
 extern std::mutex cout_mutex;
 
-inline void PrintInfo(const std::string& info) {
+inline void printInfo(const std::string& info) {
 	std::lock_guard<std::mutex> lock(cout_mutex);
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE); // Set text color to white
 	std::cout << "[SERVER_INFO]\t" << info << std::endl;
 }
 
-inline void PrintWarning(const std::string& warning) {
+inline void printWarning(const std::string& warning) {
 	std::lock_guard<std::mutex> lock(cout_mutex);
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN); // Set text color to yellow
@@ -21,7 +21,7 @@ inline void PrintWarning(const std::string& warning) {
 	SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE); // Set text color to white
 }
 
-inline void PrintError(const std::string& error) {
+inline void printError(const std::string& error) {
 	std::lock_guard<std::mutex> lock(cout_mutex);
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleTextAttribute(hConsole, FOREGROUND_RED); // Set text color to red
