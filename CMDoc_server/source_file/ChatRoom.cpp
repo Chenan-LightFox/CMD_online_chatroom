@@ -4,9 +4,9 @@
 
 extern std::mutex cout_mutex;
 
-void ChatRoom::broadcast(const MessagePacket& message) {
+void ChatRoom::broadcast(MessagePacket& message) {
     for (auto user : users) {
-        if (user->socket != -1) {
+        if (user->isConnected) {
             ChatServer::sendToClient(user->socket, message);
         }
     }

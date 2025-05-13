@@ -19,5 +19,5 @@ public:
         users.insert(user);
     }
 
-    void broadcast(const MessagePacket& message);
+    void broadcast(MessagePacket& message);
 };

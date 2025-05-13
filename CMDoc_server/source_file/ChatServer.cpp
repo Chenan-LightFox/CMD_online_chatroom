@@ -1,17 +1,20 @@
 #include "../header_file/ChatServer.h"
-#include "../header_file/printLog.h"
 #include "../header_file/ChatRoom.h"
+#include "../header_file/printLog.h"
 #include <string.h>
+#include <string>
 #include <vector>
+
 extern std::mutex cout_mutex;
 std::vector<ChatRoom> rooms;
 
-void ChatServer::sendToClient(SOCKET clientSocket, const MessagePacket &message) {
-    MessagePacket msg=message;
-    send(clientSocket, reinterpret_cast<char*>(&msg), sizeof(msg), 0);
+void ChatServer::sendToClient(SOCKET clientSocket,
+                              MessagePacket &message) {
+    send(clientSocket, reinterpret_cast<char *>(&message), sizeof(message), 0);
 }
-void ChatServer::serverMessage(SOCKET clientSocket, const std::string &message){
-    MessagePacket msg("Server",message);
+void ChatServer::serverMessage(SOCKET clientSocket,
+                               const std::string &message) {
+    MessagePacket msg("Server", message);
     sendToClient(clientSocket, msg);
 }
 
@@ -34,8 +37,8 @@ void ChatServer::handleClientCommand(SOCKET clientSocket) {
     // Handle the command
     if (command == "/help") {
         serverMessage(clientSocket,
-                       "Available commands:\n/help - show this help\n/usrname "
-                       "- display your username\n");
+                      "Available commands:\n/help - show this help\n/usrname "
+                      "- display your username\n");
         printInfo(user->username + "executed command /help");
     } else if (command == "/usrname") {
         serverMessage(clientSocket, "You are: " + user->username + "\n");
@@ -80,7 +83,7 @@ void ChatServer::start() {
 
     running = true; // Set server state to running
     printInfo("Server started on port " + std::to_string(port));
-    
+
     rooms.push_back(ChatRoom("Lobby"));
     while (running) {
         if (!running)
@@ -112,8 +115,8 @@ void ChatServer::start() {
 void ChatServer::handleClient(SOCKET clientSocket) {
     // Send message when the client connects
     serverMessage(clientSocket,
-                   "Welcome! Please register or login.\nType '/register' or "
-                   "'/login':\nType '/help' for help.\n");
+                  "Welcome! Please register or login.\nType '/register' or "
+                  "'/login':\nType '/help' for help.\n");
     printInfo("Say hello to the new client.");
     MessagePacket packet;
     int result = recv(clientSocket, reinterpret_cast<char *>(&packet),
@@ -154,17 +157,23 @@ void ChatServer::handleClient(SOCKET clientSocket) {
     }
 
     User *user = onlineUsers[clientSocket];
+    user->isConnected = true;
+    user->socket=clientSocket;
+    rooms[user->joinedRoom].users.insert(user);
 
     try { // The message loop
         while ((result = recv(clientSocket, reinterpret_cast<char *>(&packet),
                               sizeof(packet), 0)) > 0) {
             std::string msg = packet.content;
+            strcpy_s(packet.sender,user->username.c_str());
             if (msg[0] == '/') { // Check if the message is a command
                 handleClientCommand(clientSocket);
                 continue;
             }
-            printInfo("<" + onlineUsers[clientSocket]->username + "> " + msg);
-            rooms[user->joinedRoom].broadcast(packet); // Broadcast message to users
+            printInfo("<" + user->username + "> [" +
+                      rooms[user->joinedRoom].roomName + "] " + msg);
+            rooms[user->joinedRoom].broadcast(
+                packet); // Broadcast message to users
         }
         if (result == SOCKET_ERROR) {
             printError("recv failed: " + std::to_string(WSAGetLastError()));
@@ -181,6 +190,7 @@ void ChatServer::handleClient(SOCKET clientSocket) {
     }
     rooms[user->joinedRoom].users.erase(user);
     onlineUsers.erase(clientSocket);
+    user->isConnected = false;
     closesocket(clientSocket);
 }
 

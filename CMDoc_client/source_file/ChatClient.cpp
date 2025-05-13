@@ -10,7 +10,7 @@ void ChatClient::receiveLoop(SOCKET clientSocket) {
                        sizeof(packet), 0);
         if (ret <= 0)
             break;
-        tm localtime{};
+        tm localtime;
         localtime_s(&localtime, &packet.timestamp);
         std::string timestr=
             std::to_string(localtime.tm_hour) + ":" +
