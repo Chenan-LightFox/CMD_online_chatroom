@@ -33,8 +33,8 @@ Screen::Screen(short width, short height, double messageHeight)
 }
 void Screen::draw() {
     DWORD bytes = 0;
-    char data[3200];
-    memset(data, 0, sizeof(data));
+    char *data = new char[height * width];
+    memset(data, 0, height * width);
     int lastSize = 0;
 
     while (true) {
@@ -101,9 +101,9 @@ void Screen::draw() {
                 std::cout << '-';
             std::cout << '\n';
 
-            ReadConsoleOutputCharacterA(hOutput, data, sizeof(data), coord,
+            ReadConsoleOutputCharacterA(hOutput, data, height * width, coord,
                                         &bytes);
-            WriteConsoleOutputCharacterA(hOutBuf, data, sizeof(data), coord,
+            WriteConsoleOutputCharacterA(hOutBuf, data, height * width, coord,
                                          &bytes);
             SetConsoleCursorPosition(hOutBuf,
                                      {0, (short)(height * messageHeight + 1)});

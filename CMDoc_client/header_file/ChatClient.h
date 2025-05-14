@@ -15,9 +15,11 @@ class ChatClient {
     std::string ip;
     short port;
     std::thread clientThread;
+    std::string userName;
 
   public:
-    ChatClient(std::string ip, int port) : ip(ip), port(port) {};
+    ChatClient(std::string ip, int port, const std::string &userName)
+        : ip(ip), port(port), userName(userName) {};
     ~ChatClient() {
         closesocket(clientSocket);
         WSACleanup();
@@ -25,7 +27,7 @@ class ChatClient {
 
     void start();
     void stop();
-    void test(MessagePacket packet) {
+    void sendPackage(MessagePacket packet) {
         send(clientSocket, reinterpret_cast<char *>(&packet), sizeof(packet),
              0);
     }
