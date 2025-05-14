@@ -7,6 +7,7 @@
 #include <functional>
 #include <queue>
 #include <stdexcept>
+#include <stdint.h>
 #include <string>
 #include <utility>
 #include <vector>
@@ -40,11 +41,20 @@ void MatchEngine::getUsersFeature(std::vector<User *> users) {
     featureExtractor.initTopFreq(chats);
     std::vector<std::map<std::string, double>> featureMaps;
     for (auto user : users) {
+        if (user->recentMessages.empty()) {
+            std::unique_lock<std::mutex> lock(user->featureMutex);
+            user->features =
+                std::vector<double>(featureExtractor.allFeatures.size(), 0);
+            continue;
+        }
         featureMaps.push_back(
             featureExtractor.extractFeatures(user->recentMessages));
     }
     Normalizer::normalize(featureMaps, featureExtractor.allFeatures);
     for (int i = 0; i < users.size(); i++) {
+        if (users[i]->recentMessages.empty()) {
+            continue;
+        }
         std::unique_lock<std::mutex> lock(users[i]->featureMutex);
         users[i]->features =
             Normalizer::toVector(featureMaps[i], featureExtractor.allFeatures);
