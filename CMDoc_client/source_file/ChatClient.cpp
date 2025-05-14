@@ -2,9 +2,11 @@
 #include "../header_file/PrintLog.h"
 #include <mutex>
 #include <queue>
+#include <stack>
 #include <string>
 
-std::queue<MessagePacket> messageQueue;
+std::stack<MessagePacket> messageStack;
+std::stack<MessagePacket> messageStackBuf;
 
 void ChatClient::receiveLoop(SOCKET clientSocket) {
     MessagePacket packet{};
@@ -15,7 +17,7 @@ void ChatClient::receiveLoop(SOCKET clientSocket) {
             break;
         {
             std::lock_guard<std::mutex> lock(messageMutex);
-            messageQueue.push(packet);
+            messageStack.push(packet);
         }
     }
 }

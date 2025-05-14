@@ -10,15 +10,19 @@ void ChatHistory::saveHistory(const std::string &fileName) {
             return;
         }
         std::lock_guard<std::mutex> lock(messageMutex);
-        int queueSize = messageQueue.size();
+        int queueSize = messageStack.size();
         for (int i = 0; i < queueSize; i++) {
-            MessagePacket msg = messageQueue.front();
-            messageQueue.pop();
+            MessagePacket msg = messageStack.top();
+            messageStack.pop();
+            messageStackBuf.push(msg);
             fs.write(reinterpret_cast<char *>(&msg), sizeof(msg));
             fs.flush();
-            messageQueue.push(msg);
         }
         fs.close();
+        while (!messageStackBuf.empty()) {
+            messageStack.push(messageStackBuf.top());
+            messageStackBuf.pop();
+        }
     }
 }
 void ChatHistory::loadHistory(const std::string &fileName) {
@@ -29,7 +33,11 @@ void ChatHistory::loadHistory(const std::string &fileName) {
     MessagePacket msg;
     while (fs.read(reinterpret_cast<char *>(&msg), sizeof(msg))) {
         std::lock_guard<std::mutex> lock(messageMutex);
-        messageQueue.push(msg);
+        messageStackBuf.push(msg);
     }
     fs.close();
+    while (!messageStackBuf.empty()) {
+        messageStack.push(messageStackBuf.top());
+        messageStackBuf.pop();
+    }
 }

@@ -2,6 +2,7 @@
 #include "../header_file/ChatHistory.h"
 #include "../header_file/PrintLog.h"
 #include "../header_file/Screen.h"
+#include <conio.h>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -12,6 +13,7 @@ std::mutex coutMutex;
 std::mutex messageMutex;
 
 int main() {
+
     ChatHistory::loadHistory("history.dat");
 
     std::string userName, passWord;
@@ -32,6 +34,7 @@ int main() {
     Screen screen(userName, 100, 30);
     std::thread screenThread(&Screen::draw, &screen);
     screenThread.detach();
+
     client.start();
     if (isRegistered)
         client.sendPackage(
@@ -42,6 +45,24 @@ int main() {
 
     std::string message;
     while (std::getline(std::cin, message)) {
+        if (message == "/roll") {
+            char ch;
+            while (true) {
+                if (_kbhit()) {
+                    ch = _getch();
+                    if (ch == 72)
+                        screen.bufMsg++;
+                    if (ch == 80 && screen.bufMsg > 0)
+                        screen.bufMsg--;
+                    if (ch == 27)
+                        break;
+                }
+                Sleep(50);
+            }
+            screen.bufMsg = 0;
+            continue;
+        }
+        screen.bufMsg = 0;
         MessagePacket package{userName, message};
         client.sendPackage(package);
     }
