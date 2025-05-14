@@ -317,23 +317,6 @@ void ChatServer::getFeatures() {
                                           userGroups[i]);
             }
         }
-        for (auto user : users) {
-            printInfo("User " + user->username + " Features:");
-            std::string featureStr;
-
-            std::unique_lock<std::mutex> lock(user->featureMutex);
-            for (auto i : user->features)
-                featureStr += std::to_string(i) + ' ';
-            lock.unlock();
-            printInfo(featureStr + '\n');
-        }
-        for (auto room : rooms) {
-            printInfo("Room " + room->roomName + " Features:");
-            std::string featureStr;
-            for (auto i : room->features)
-                featureStr += std::to_string(i) + ' ';
-            printInfo(featureStr + '\n');
-        }
         Sleep(10000);
     }
 }

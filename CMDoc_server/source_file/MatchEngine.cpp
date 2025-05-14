@@ -19,7 +19,6 @@ MatchEngine::MatchEngine(std::string dictFileName) {
         throw std::runtime_error("Failed to open dictionary file");
     }
 
-    printInfo("[MatchEngine]Loading dictionary...");
     std::string word;
     while (dictFile >> word) {
         dict.push_back(word);
@@ -32,24 +31,18 @@ std::wstring string2wstring(const std::string &str) {
 }
 
 void MatchEngine::getUsersFeature(std::vector<User *> users) {
-    printInfo("[MatchEngine]Loading tokenizer...");
     Tokenizer tokenizer(dict);
-    printInfo("[MatchEngine]Loading featureExtractor...");
     FeatureExtractor featureExtractor(tokenizer, 5);
-    printInfo("[MatchEngine]Loading chats...");
     std::vector<std::string> chats;
     for (auto user : users)
         for (auto message : user->recentMessages)
             chats.push_back(message.content);
-    printInfo("[MatchEngine]Init featureExtractor...");
     featureExtractor.initTopFreq(chats);
-    printInfo("[MatchEngine]Extracting feature...");
     std::vector<std::map<std::string, double>> featureMaps;
     for (auto user : users) {
         featureMaps.push_back(
             featureExtractor.extractFeatures(user->recentMessages));
     }
-    printInfo("[MatchEngine]Normalizing...");
     Normalizer::normalize(featureMaps, featureExtractor.allFeatures);
     for (int i = 0; i < users.size(); i++) {
         std::unique_lock<std::mutex> lock(users[i]->featureMutex);
