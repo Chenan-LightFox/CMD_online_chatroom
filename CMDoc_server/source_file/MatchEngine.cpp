@@ -83,7 +83,6 @@ FeatureExtractor::FeatureExtractor(Tokenizer tokenizer, int n)
     for (int i = 0; i < n; i++)
         allFeatures.push_back("top" + std::to_string(i) + "FreqWord");
     allFeatures.push_back("avgMessageLength");
-    allFeatures.push_back("avgMessageLength");
     allFeatures.push_back("punctuationRate");
 }
 std::map<std::string, double>
@@ -119,7 +118,6 @@ FeatureExtractor::extractFeatures(const std::vector<MessagePacket> &chats) {
             features["top" + std::to_string(i) + "FreqWord"] = 0;
     }
 
-    features["avgMessageLength"] = (double)totalLength / chats.size();
     features["avgMessageLength"] = (double)totalLength / chats.size();
     features["punctuationRate"] = (double)totalPunctuations / chats.size();
 

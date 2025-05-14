@@ -4,7 +4,6 @@
 #include "../header_file/PrintLog.h"
 #include "../header_file/User.h"
 
-
 #pragma comment(lib, "ws2_32.lib")
 std::mutex cout_mutex;
 
@@ -21,6 +20,8 @@ int main() {
             break;
         } else if (cmd == "help") {
             printInfo("Available commands: stop, help");
+        } else if (cmd == "features") {
+            server.getFeatures();
         } else {
             printWarning("Unknown command: " + cmd +
                          ". Type 'help' for available commands.");

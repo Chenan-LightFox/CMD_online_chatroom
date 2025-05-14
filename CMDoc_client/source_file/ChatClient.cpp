@@ -18,17 +18,6 @@ void ChatClient::receiveLoop(SOCKET clientSocket) {
             std::lock_guard<std::mutex> lock(messageMutex);
             messageQueue.push(packet);
         }
-        tm localtime;
-        localtime_s(&localtime, &packet.timestamp);
-        std::string timestr = std::to_string(localtime.tm_hour) + ":" +
-                              std::to_string(localtime.tm_min) + ":" +
-                              std::to_string(localtime.tm_sec);
-        {
-            std::lock_guard<std::mutex> lock(coutMutex);
-            std::cout << timestr << ": \n";
-            std::cout << "<" << packet.sender << "> " << packet.content
-                      << std::endl;
-        }
     }
 }
 void ChatClient::start() {

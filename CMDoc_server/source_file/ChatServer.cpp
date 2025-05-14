@@ -1,5 +1,6 @@
 #include "../header_file/ChatServer.h"
 #include "../header_file/ChatRoom.h"
+#include "../header_file/MatchEngine.h"
 #include "../header_file/printLog.h"
 #include <string.h>
 #include <string>
@@ -8,8 +9,7 @@
 extern std::mutex cout_mutex;
 std::vector<ChatRoom> rooms;
 
-void ChatServer::sendToClient(SOCKET clientSocket,
-                              MessagePacket &message) {
+void ChatServer::sendToClient(SOCKET clientSocket, MessagePacket &message) {
     send(clientSocket, reinterpret_cast<char *>(&message), sizeof(message), 0);
 }
 void ChatServer::serverMessage(SOCKET clientSocket,
@@ -157,19 +157,21 @@ void ChatServer::handleClient(SOCKET clientSocket) {
     }
 
     User *user = onlineUsers[clientSocket];
-    user->isConnected = true; // Set user as connected
-    user->socket=clientSocket; // Set user socket
+    user->isConnected = true;    // Set user as connected
+    user->socket = clientSocket; // Set user socket
     rooms[user->joinedRoom].users.insert(user);
 
     try { // The message loop
         while ((result = recv(clientSocket, reinterpret_cast<char *>(&packet),
                               sizeof(packet), 0)) > 0) {
             std::string msg = packet.content;
-            strcpy_s(packet.sender,user->username.c_str());
+            strcpy_s(packet.sender, user->username.c_str());
             if (msg[0] == '/') { // Check if the message is a command
                 handleClientCommand(clientSocket);
                 continue;
             }
+            user->recentMessages.push_back(msg);
+            rooms[user->joinedRoom].messages.push_back(msg);
             printInfo("<" + user->username + "> [" +
                       rooms[user->joinedRoom].roomName + "] " + msg);
             rooms[user->joinedRoom].broadcast(
@@ -200,5 +202,21 @@ void ChatServer::stop() {
         shutdown(serverSocket, SD_BOTH);
         closesocket(serverSocket);
         printInfo("Server stopped.");
+    }
+}
+
+void ChatServer::getFeatures() {
+    std::vector<User *> users;
+    for (auto it = registeredUsers.begin(); it != registeredUsers.end(); it++) {
+        users.push_back(it->second);
+    }
+    MatchEngine match("xiandaihanyuchangyongcibiao.txt");
+    match.getUsersFeature(users);
+    for (auto user : users) {
+        printInfo("User " + user->username + " Features:");
+        std::string featureStr;
+        for (auto i : user->features)
+            featureStr += std::to_string(i);
+        printInfo(featureStr + '\n');
     }
 }

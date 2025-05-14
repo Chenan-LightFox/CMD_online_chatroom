@@ -13,9 +13,9 @@ std::wstring string2wstring(std::string str);
 class MatchEngine {
   private:
     std::vector<std::string> dict;
-    MatchEngine(std::string dictFileName);
 
   public:
+    MatchEngine(std::string dictFileName);
     void getUsersFeature(std::vector<User *> users);
 };
 
