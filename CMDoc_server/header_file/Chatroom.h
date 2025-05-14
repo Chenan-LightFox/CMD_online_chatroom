@@ -28,7 +28,7 @@ class ChatRoom {
     void addUser(User *user) { users.insert(user); }
 
     void broadcast(MessagePacket &message);
-    void getRoomFeatures();
+    void getRoomFeatures(int featureSize, std::vector<User *> &users);
 
     static int roomExists(const std::string &name);
     static bool createRoom(const std::string &name);
