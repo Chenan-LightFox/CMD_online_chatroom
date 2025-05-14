@@ -65,7 +65,7 @@ void ChatServer::handleClientCommand(std::string &command,
                 serverMessage(clientSocket, "Room name is required!\n");
                 return;
             }
-            if (~ChatRoom::roomExists(roomName)) {
+            if (!(~ChatRoom::roomExists(roomName))) {
                 serverMessage(clientSocket, "Room does not exist!\n");
                 return;
             }
@@ -97,7 +97,26 @@ list - List all rooms)");
         }
         serverMessage(clientSocket, result);
         printInfo(user->username + " executed command /features");
-    } else {
+    } else if (command == "/best-room") {
+        std::vector<std::pair<double, std::string>> dist;
+        for (int i = 0; i < rooms.size(); i++) {
+            std::cout << rooms[i]->features.size() << std::endl;
+            double sim = Similarity::cosineSimilarity(user->features,
+                                                      rooms[i]->features);
+            dist.push_back({sim, rooms[i]->roomName});
+        }
+        std::sort(dist.begin(), dist.end(),
+                  std::greater<std::pair<double, std::string>>());
+        std::string result = "Top 3 best rooms:\n";
+        for (int i = 0; i < 3 && i < dist.size(); i++) {
+            result +=
+                dist[i].second + ": " + std::to_string(dist[i].first) + "\n";
+        }
+        serverMessage(clientSocket, result);
+        printInfo(user->username + " executed command /best-room");
+    }
+
+    else {
         serverMessage(clientSocket, "Unknown command.\n");
         printInfo(user->username + " sent an unknown command: " + command);
     }
@@ -288,8 +307,15 @@ void ChatServer::getFeatures() {
             users.push_back(it->second);
         }
         match.getUsersFeature(users);
-        for (auto room : rooms) {
-            room->getRoomFeatures();
+        std::vector<std::vector<User *>> userGroups(rooms.size());
+        for (auto user : users) {
+            userGroups[user->joinedRoom].push_back(user);
+        }
+        if (users.size() > 0) {
+            for (int i = 0; i < rooms.size(); i++) {
+                rooms[i]->getRoomFeatures(users[0]->features.size(),
+                                          userGroups[i]);
+            }
         }
         for (auto user : users) {
             printInfo("User " + user->username + " Features:");
@@ -299,6 +325,13 @@ void ChatServer::getFeatures() {
             for (auto i : user->features)
                 featureStr += std::to_string(i) + ' ';
             lock.unlock();
+            printInfo(featureStr + '\n');
+        }
+        for (auto room : rooms) {
+            printInfo("Room " + room->roomName + " Features:");
+            std::string featureStr;
+            for (auto i : room->features)
+                featureStr += std::to_string(i) + ' ';
             printInfo(featureStr + '\n');
         }
         Sleep(10000);

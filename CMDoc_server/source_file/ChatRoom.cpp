@@ -17,19 +17,18 @@ void ChatRoom::broadcast(MessagePacket &message) {
     }
 }
 
-void ChatRoom::getRoomFeatures() {
+void ChatRoom::getRoomFeatures(int featureSize, std::vector<User *> &users) {
     std::map<std::string, int> msgCount;
     for (auto msg : messages) {
         msgCount[msg.sender]++;
     }
     features.clear();
+    features = std::vector<double>(featureSize, 0);
     size_t totMsg = 0;
     for (auto user : users) {
         if (msgCount.find(user->username) == msgCount.end())
             msgCount[user->username] = 0;
         totMsg += msgCount[user->username];
-        if (features.empty())
-            features.resize(user->features.size());
         for (int i = 0; i < features.size(); i++)
             features[i] += user->features[i] * msgCount[user->username];
     }
@@ -48,7 +47,7 @@ int ChatRoom::roomExists(const std::string &name) {
 
 bool ChatRoom::createRoom(const std::string &name) {
     std::lock_guard<std::mutex> lock(roomMutex);
-    if (!(~roomExists(name)))
+    if (~roomExists(name))
         return false;
     rooms.push_back(new ChatRoom(name));
     saveRoomList();
@@ -99,6 +98,7 @@ void ChatRoom::loadRoomList() {
     std::ifstream file("room_list.txt");
     if (!file.is_open()) {
         printError("Failed to open room_list.txt for reading.");
+        createRoom("Lobby");
         return;
     }
     std::string roomName;
