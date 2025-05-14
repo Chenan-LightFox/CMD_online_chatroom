@@ -2,6 +2,7 @@
 #include "../header_file/ChatRoom.h"
 #include "../header_file/MatchEngine.h"
 #include "../header_file/printLog.h"
+#include "../header_file/UserDataManager.h"
 #include <string.h>
 #include <string>
 #include <vector>
@@ -50,6 +51,8 @@ void ChatServer::handleClientCommand(SOCKET clientSocket) {
 }
 
 void ChatServer::start() {
+    
+
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
         printError("WSAStartup failed");
@@ -136,6 +139,9 @@ void ChatServer::handleClient(SOCKET clientSocket) {
         User *newUser = new User(username, password);
         registeredUsers[username] = newUser;
         onlineUsers[clientSocket] = newUser;
+        UserDataManager udm;
+        std::string directory = "users/" + username + ".dat";
+        udm.saveUsers(directory, newUser); // Save user data to file
         serverMessage(clientSocket, "Registration successful.\n");
         printInfo("New user registered: " + username);
     } else if (command == "/login") {

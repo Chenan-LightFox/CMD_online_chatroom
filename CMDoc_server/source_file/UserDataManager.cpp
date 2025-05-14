@@ -15,15 +15,14 @@ bool UserDataManager::loadUsers(const std::string &directory,
                 continue;
 
             std::string username, password;
-            int interestCount;
-            inFile >> username >> password >> interestCount;
+            int featuresCount;
+            inFile >> username >> password >> featuresCount;
 
             User *user = new User(username, password);
-            for (int i = 0; i < interestCount; ++i) {
-                std::string tag;
+            for (int i = 0; i < featuresCount; ++i) {
                 double weight;
-                inFile >> tag >> weight;
-                user->interestProfile[tag] = weight;
+                inFile >> weight;
+                user->features[i] = weight;
             }
             users[username] = user;
             inFile.close();
@@ -44,9 +43,9 @@ bool UserDataManager::saveUsers(const std::string &directory,
         return false;
 
     outFile << user->username << " " << user->password << " "
-            << user->interestProfile.size();
-    for (const auto &pair : user->interestProfile) {
-        outFile << pair.first << " " << pair.second << "\n";
+            << user->features.size();
+    for (const auto &f : user->features) {
+        outFile << f << "\n";
     }
     outFile << "\n";
     outFile.close();
