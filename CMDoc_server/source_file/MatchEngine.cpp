@@ -52,6 +52,7 @@ void MatchEngine::getUsersFeature(std::vector<User *> users) {
     printInfo("[MatchEngine]Normalizing...");
     Normalizer::normalize(featureMaps, featureExtractor.allFeatures);
     for (int i = 0; i < users.size(); i++) {
+        std::unique_lock<std::mutex> lock(users[i]->featureMutex);
         users[i]->features =
             Normalizer::toVector(featureMaps[i], featureExtractor.allFeatures);
     }
