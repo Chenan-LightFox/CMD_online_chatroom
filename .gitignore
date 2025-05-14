@@ -37,3 +37,5 @@
 /CMDoc_server/CMDoc_server.vcxproj
 /CMDoc_server/CMDoc_server.vcxproj.filters
 /CMDoc_server/CMDoc_server.vcxproj.user
+/CMDoc_client/x64/Debug
+/CMDoc_server/x64/Debug
