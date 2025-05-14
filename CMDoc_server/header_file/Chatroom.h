@@ -33,7 +33,7 @@ class ChatRoom {
     static int roomExists(const std::string &name);
     static bool createRoom(const std::string &name);
     static std::string listRooms();
-    static void getRoomMembers(const std::string &name);
+    static std::string getRoomMembers(const std::string &name);
     static void saveRoomList();
     static void loadRoomList();
     static std::vector<std::string> getRoomNames();
