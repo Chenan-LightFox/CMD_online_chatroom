@@ -3,6 +3,7 @@
 #include "../header_file/MatchEngine.h"
 #include "../header_file/printLog.h"
 #include "../header_file/UserDataManager.h"
+#include "../header_file/ChatHistoryManager.h"
 #include <string.h>
 #include <string>
 #include <vector>
@@ -88,7 +89,15 @@ void ChatServer::start() {
     running = true; // Set server state to running
     printInfo("Server started on port " + std::to_string(port));
 
-    rooms.push_back(ChatRoom("Lobby"));
+    rooms.push_back(ChatRoom("Lobby")); // Initialize rooms
+
+    // Load chat history and get chat features for each room
+    for (ChatRoom &r : rooms) { 
+		r.getRoomFeatures();
+        std::thread saveThread(ChatHistoryManager::saveHistory, r.roomName);
+        saveThread.detach();
+	}
+
     while (running) {
         if (!running)
             break; // Check if server is still running before accepting new
