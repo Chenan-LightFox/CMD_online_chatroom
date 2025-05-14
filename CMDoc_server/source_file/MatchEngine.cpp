@@ -98,10 +98,13 @@ std::vector<std::wstring> Tokenizer::fmmTokenizer(const std::wstring &str) {
 }
 FeatureExtractor::FeatureExtractor(Tokenizer tokenizer, int n)
     : tokenizer(tokenizer), n(n) {
+    const std::string allFeaturesStr[] = {
+        "interAvgReplyHour", "interReplyFreq", "vocRichness",    "senLenAvg",
+        "senLenVar",         "punRate",        "punQuesMarkRate"};
     for (int i = 0; i < n; i++)
-        allFeatures.push_back("top" + std::to_string(i) + "FreqWord");
-    allFeatures.push_back("avgMessageLength");
-    allFeatures.push_back("punctuationRate");
+        allFeatures.push_back("vocTop" + std::to_string(i) + "FreqWord");
+    for (auto i : allFeaturesStr)
+        allFeatures.push_back(i);
 }
 std::map<std::string, double>
 FeatureExtractor::extractFeatures(const std::vector<MessagePacket> &chats) {
@@ -135,7 +138,7 @@ void FeatureExtractor::interactionLevel(
         endStamp = max(endStamp, msg.timestamp);
     }
     features["interAvgReplyHour"] = (double)avgReplyHour / chats.size();
-    features["interReplyFreq"] = (double)chats.size() / (startStamp - endStamp);
+    features["interReplyFreq"] = (double)chats.size() / (endStamp - startStamp);
 }
 void FeatureExtractor::vocabularyLevel(
     const std::vector<MessagePacket> &chats,
@@ -206,7 +209,7 @@ void FeatureExtractor::punctuationLevel(
         std::wstring wstrMsg = string2wstring(msg.content);
         for (int i = 0; i < wstrMsg.length(); i++) {
             if (iswpunct(wstrMsg[i])) {
-                if (wstrMsg[i] == '?' || wstrMsg[i] == L'？')
+                if (wstrMsg[i] == '?' || wstrMsg[i] == L'?')
                     totalQuestionMark++;
                 while (++i < wstrMsg.length() && iswpunct(wstrMsg[i]))
                     ;

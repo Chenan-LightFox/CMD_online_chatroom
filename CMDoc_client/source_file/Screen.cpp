@@ -53,7 +53,7 @@ void Screen::draw() {
                 int j = 0, cnt = 0;
                 for (j = 0; msg.content[j] != '\0'; j++) {
                     cnt++;
-                    if (cnt == (width - 1)) {
+                    if (cnt >= (width - 1) && msg.content[j] > 0) {
                         newMsg.content[j + off] = '\n';
                         off++;
                         cnt = 0;
