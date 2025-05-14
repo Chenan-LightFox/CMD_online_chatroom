@@ -1,7 +1,8 @@
 #include "../header_file/ChatServer.h"
-#include "../header_file/PrintLog.h"
 #include "../header_file/CommandManager.h"
+#include "../header_file/PrintLog.h"
 #include "../header_file/ServerCommand.h"
+
 
 #pragma comment(lib, "ws2_32.lib")
 std::mutex cout_mutex;
@@ -12,7 +13,7 @@ int main() {
 
     // Register commands
     CommandManager cmdMgr;
-    cmdMgr.registerCommand("features", std::make_unique<FeaturesCommand>());
+    // cmdMgr.registerCommand("features", std::make_unique<FeaturesCommand>());
     cmdMgr.registerCommand("help", std::make_unique<HelpCommand>());
     cmdMgr.registerCommand("room", std::make_unique<RoomCommand>());
     cmdMgr.registerCommand("stop", std::make_unique<StopCommand>());
@@ -20,7 +21,8 @@ int main() {
     // Get command
     std::string cmd;
     while (std::getline(std::cin, cmd)) {
-        if (cmd.empty()) continue;
+        if (cmd.empty())
+            continue;
         cmdMgr.executeCommand(cmd, server);
         /* if (cmd0 == "stop") {
             server.stop();

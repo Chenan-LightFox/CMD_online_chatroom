@@ -9,7 +9,6 @@ void FeaturesCommand::execute(const std::string &cmd, ChatServer &server) {
 
 void HelpCommand::execute(const std::string &cmd, ChatServer &server) {
     printInfo("Available commands:\n"
-              "features - Get the features of rooms\n"
               "help - Show this help\n"
               "room - Operate with rooms\n"
               "stop - Stop this server\n");
