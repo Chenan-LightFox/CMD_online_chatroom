@@ -18,14 +18,14 @@ int main() {
 
     std::string userName, passWord;
     bool isRegistered = true;
-    std::cout << "Enter Username(Enter 'Register' for register):";
+    std::cout << "\n\n\n\t\t\tEnter Username(Enter 'Register' for register):";
     std::cin >> userName;
     if (userName == "Register") {
         isRegistered = false;
-        std::cout << "Enter Username for register:";
+        std::cout << "\n\t\t\tEnter Username for register:";
         std::cin >> userName;
     }
-    std::cout << "Enter Password:";
+    std::cout << "\n\t\t\tEnter Password:";
     std::cin >> passWord;
     ChatClient client("127.0.0.1", 8088, userName);
     std::thread saveThread(ChatHistory::saveHistory, "history.dat");
