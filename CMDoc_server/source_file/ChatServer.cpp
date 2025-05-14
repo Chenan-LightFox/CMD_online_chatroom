@@ -97,7 +97,25 @@ list - List all rooms)");
         }
         serverMessage(clientSocket, result);
         printInfo(user->username + " executed command /features");
-    } else {
+    } else if (command == "/best-room") {
+        std::vector<std::pair<double, std::string>> dist;
+        for (int i = 0; i < rooms.size(); i++) {
+            double sim = Similarity::cosineSimilarity(user->features,
+                                                      rooms[i]->features);
+            dist.push_back({sim, rooms[i]->roomName});
+        }
+        std::sort(dist.begin(), dist.end(),
+                  std::greater<std::pair<double, std::string>>());
+        std::string result = "Top 3 best rooms:\n";
+        for (int i = 0; i < 3 && i < dist.size(); i++) {
+            result +=
+                dist[i].second + ": " + std::to_string(dist[i].first) + "\n";
+        }
+        serverMessage(clientSocket, result);
+        printInfo(user->username + " executed command /best-room");
+    }
+
+    else {
         serverMessage(clientSocket, "Unknown command.\n");
         printInfo(user->username + " sent an unknown command: " + command);
     }
