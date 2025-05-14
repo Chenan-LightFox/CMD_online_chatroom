@@ -51,7 +51,8 @@ void ChatServer::handleClientCommand(SOCKET clientSocket) {
 }
 
 void ChatServer::start() {
-    
+    UserDataManager udm;
+    udm.loadUsers("user", registeredUsers); // Load user data from file
 
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
