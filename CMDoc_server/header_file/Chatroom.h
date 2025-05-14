@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+static std::mutex roomMutex;
+
 class ChatRoom {
   public:
     std::string roomName;
@@ -27,4 +29,14 @@ class ChatRoom {
 
     void broadcast(MessagePacket &message);
     void getRoomFeatures();
+
+
+
+    static bool roomExists(const std::string &name);
+    static bool createRoom(const std::string &name);
+    // static void listRooms();
+    // static void getRoomMembers(roomName);
+    static std::vector<std::string> getRoomNames();
 };
+
+extern std::vector<ChatRoom *> rooms;

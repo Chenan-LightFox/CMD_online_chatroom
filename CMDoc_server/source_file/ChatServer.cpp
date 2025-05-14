@@ -42,10 +42,15 @@ void ChatServer::handleClientCommand(SOCKET clientSocket) {
                       "Available commands:\n/help - show this help\n/usrname "
                       "- display your username\n");
         printInfo(user->username + "executed command /help");
-    } else if (command == "/usrname") {
+    }
+    else if (command == "/usrname") {
         serverMessage(clientSocket, "You are: " + user->username + "\n");
         printInfo(user->username + " executed command /usrname");
-    } else {
+    }
+    else if (command == "/room") {
+        // create, join, leave, list
+    }
+    else {
         serverMessage(clientSocket, "Unknown command.\n");
         printInfo(user->username + " sent an unknown command: " + command);
     }
@@ -89,7 +94,7 @@ void ChatServer::start() {
     running = true; // Set server state to running
     printInfo("Server started on port " + std::to_string(port));
 
-    rooms.push_back(new ChatRoom("Lobby")); // Initialize rooms
+    // rooms.push_back(new ChatRoom("Lobby")); // Initialize rooms
 
     // Load chat history and get chat features for each room
     for (auto room : rooms) {

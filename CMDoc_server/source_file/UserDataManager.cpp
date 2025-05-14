@@ -15,15 +15,10 @@ bool UserDataManager::loadUsers(const std::string &directory,
                 continue;
 
             std::string username, password;
-            int featuresCount;
-            inFile >> username >> password >> featuresCount;
+            int joinedRoom;
+            inFile >> username >> password >> joinedRoom;
 
             User *user = new User(username, password);
-            for (int i = 0; i < featuresCount; ++i) {
-                double weight;
-                inFile >> weight;
-                user->features[i] = weight;
-            }
             users[username] = user;
             inFile.close();
         }

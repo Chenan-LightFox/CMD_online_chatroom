@@ -1,0 +1,54 @@
+#include "../header_file/ServerCommand.h"
+#include "../header_file/PrintLog.h"
+#include "../header_file/Chatroom.h"
+
+void FeaturesCommand::execute(const std::string &cmd, ChatServer& server) {
+    server.getFeatures();
+}
+
+void HelpCommand::execute(const std::string &cmd, ChatServer &server) {
+    printInfo("Available commands:\n"
+              "features - Get the features of rooms\n"
+              "help - Show this help\n"
+              "room - Operate with rooms\n"
+              "stop - Stop this server\n");
+}
+
+void RoomCommand::execute(const std::string &cmd, ChatServer &server) {
+    std::istringstream iss(cmd);
+    std::string command;
+    iss >> command;
+
+    if (command == "create") {
+		std::string roomName;
+		iss >> roomName;
+		if (roomName.empty()) {
+			printWarning("Room name is required!\n");
+			return;
+		}
+		ChatRoom::createRoom(roomName);
+	}
+	else if (command == "list") {
+        std::string roomName;
+        iss >> roomName;
+        if (roomName.empty()) {
+            // ChatRoom::listRooms();
+            return;
+        }
+        // ChatRoom::getRoomMembers(roomName);
+	}
+	else {
+        printWarning("Not enough parameters!\n"
+                     "Available commands:\n"
+                     "create - Create a new room\n"
+                     "join - Join a room\n"
+                     "leave - Leave a room\n"
+                     "list - List all rooms\n"
+                     "remove - Remove a room\n");
+	}
+    
+}
+
+void StopCommand::execute(const std::string &cmd, ChatServer& server) {
+    server.stop();
+}

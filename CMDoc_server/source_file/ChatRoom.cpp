@@ -35,3 +35,38 @@ void ChatRoom::getRoomFeatures() {
         features[i] /= totMsg;
     }
 }
+
+bool ChatRoom::roomExists(const std::string &name) {
+    std::lock_guard<std::mutex> lock(roomMutex);
+    for (auto room : rooms) {
+        if (room->roomName == name)
+            return true;
+    }
+    return false;
+}
+
+bool ChatRoom::createRoom(const std::string &name) {
+    std::lock_guard<std::mutex> lock(roomMutex);
+    if (roomExists(name))
+        return false;
+    rooms.push_back(new ChatRoom(name));
+    return true;
+}
+/*
+void ChatRoom::listRooms() {
+    for (auto room : rooms) {
+        //
+    }
+}
+
+void ChatRoom::getRoomMembers(const std::string name){
+    //
+}
+*/
+std::vector<std::string> ChatRoom::getRoomNames() {
+    std::lock_guard<std::mutex> lock(roomMutex);
+    std::vector<std::string> names;
+    for (auto room : rooms)
+        names.push_back(room->roomName);
+    return names;
+}
