@@ -60,13 +60,27 @@ std::string ChatRoom::listRooms() {
     result =
         "Now the server has " + std::to_string(rooms.size()) + " room(s): ";
     for (auto room : rooms) {
-        result += " > " + room->roomName;
+        result += " > " + room->roomName + "\n";
     }
     return result;
 }
 
-void ChatRoom::getRoomMembers(const std::string &name) {
-    //
+std::string ChatRoom::getRoomMembers(const std::string &name) {
+    std::lock_guard<std::mutex> lock(roomMutex);
+    int index = roomExists(name);
+    if (index == -1) {
+        return "Room \"" + name + "\" does not exist.";
+    }
+    ChatRoom *targetRoom = rooms[index];
+    std::string result = "Now the room \"" + name + "\" has " +
+                         std::to_string(targetRoom->users.size()) +
+                         " member(s):\n";
+
+    for (auto user : targetRoom->users) {
+        result += " > " + user->username + "\n";
+    }
+
+    return result;
 }
 
 void ChatRoom::saveRoomList() {
