@@ -43,6 +43,10 @@ void ChatHistoryManager::loadHistory(
     while (fs.read(reinterpret_cast<char *>(&msg), sizeof(msg))) {
         std::lock_guard<std::mutex> lock(room->messageMutex);
         room->messages.push_back(msg);
+        if (registeredUsers.find(msg.sender) == registeredUsers.end()) {
+            printWarning("User not found: " + std::string(msg.sender));
+            continue;
+        }
         registeredUsers[msg.sender]->recentMessages.push_back(msg);
     }
     fs.close();
