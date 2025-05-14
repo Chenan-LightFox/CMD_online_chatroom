@@ -1,9 +1,14 @@
 #include "../header_file/MatchEngine.h"
+#include "../header_file/PrintLog.h"
 #include <codecvt>
+#include <cwctype>
+#include <exception>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <locale>
 #include <queue>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -11,32 +16,40 @@
 
 MatchEngine::MatchEngine(std::string dictFileName) {
     std::ifstream dictFile(dictFileName);
+    setlocale(LC_ALL, "chs");
     if (!dictFile)
         throw std::runtime_error("Failed to open dictionary file");
+    printInfo("[MatchEngine]Loading dictionary...");
     std::string word;
     while (dictFile >> word) {
         dict.push_back(word);
     }
 }
 
-std::wstring string2wstring(std::string str) {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-    return converter.from_bytes(str);
+std::wstring string2wstring(const std::string &str) {
+    auto wStr = std::filesystem::path(str).wstring();
+    return wStr;
 }
 
 void MatchEngine::getUsersFeature(std::vector<User *> users) {
+    printInfo("[MatchEngine]Loading tokenizer...");
     Tokenizer tokenizer(dict);
+    printInfo("[MatchEngine]Loading featureExtractor...");
     FeatureExtractor featureExtractor(tokenizer, 5);
+    printInfo("[MatchEngine]Loading chats...");
     std::vector<std::string> chats;
     for (auto user : users)
         for (auto message : user->recentMessages)
             chats.push_back(message.content);
+    printInfo("[MatchEngine]Init featureExtractor...");
     featureExtractor.initTopFreq(chats);
+    printInfo("[MatchEngine]Extracting feature...");
     std::vector<std::map<std::string, double>> featureMaps;
     for (auto user : users) {
         featureMaps.push_back(
             featureExtractor.extractFeatures(user->recentMessages));
     }
+    printInfo("[MatchEngine]Normalizing...");
     Normalizer::normalize(featureMaps, featureExtractor.allFeatures);
     for (int i = 0; i < users.size(); i++) {
         users[i]->features =
@@ -47,10 +60,15 @@ void MatchEngine::getUsersFeature(std::vector<User *> users) {
 
 Tokenizer::Tokenizer(std::vector<std::string> &dictVec) {
     maxWordLen = 0;
-    for (auto word : dictVec) {
-        std::wstring wWord = string2wstring(word);
-        dict.insert(wWord);
-        maxWordLen = max(maxWordLen, wWord.length());
+    try {
+        for (auto word : dictVec) {
+            std::wstring wWord = string2wstring(word);
+            dict.insert(wWord);
+            maxWordLen = max(maxWordLen, wWord.length());
+        }
+    } catch (const std::exception &e) {
+        throw std::runtime_error(
+            std::string("[Tokenizer] Failed to initialize: ") + e.what());
     }
 }
 std::vector<std::wstring> Tokenizer::fmmTokenizer(const std::wstring &str) {
@@ -89,8 +107,42 @@ std::map<std::string, double>
 FeatureExtractor::extractFeatures(const std::vector<MessagePacket> &chats) {
 
     std::map<std::string, double> features;
-    size_t totalLength = 0, totalPunctuations = 0, totalWords = 0;
+
+    interactionLevel(chats, features);
+    vocabularyLevel(chats, features);
+    sentenceLevel(chats, features);
+    punctuationLevel(chats, features);
+
+    for (const auto &[key, value] : features) {
+        printInfo(key + " " + std::to_string(value));
+    }
+
+    return features;
+}
+
+void FeatureExtractor::interactionLevel(
+    const std::vector<MessagePacket> &chats,
+    std::map<std::string, double> &features) {
+    time_t avgReplyHour = 0;
+
+    time_t startStamp = 0x3f3f3f3f3f3f3f3f, endStamp = 0;
+
+    for (const auto &msg : chats) {
+        tm localtime;
+        localtime_s(&localtime, &msg.timestamp);
+        avgReplyHour += localtime.tm_hour;
+        startStamp = min(startStamp, msg.timestamp);
+        endStamp = max(endStamp, msg.timestamp);
+    }
+    features["interAvgReplyHour"] = (double)avgReplyHour / chats.size();
+    features["interReplyFreq"] = (double)chats.size() / (startStamp - endStamp);
+}
+void FeatureExtractor::vocabularyLevel(
+    const std::vector<MessagePacket> &chats,
+    std::map<std::string, double> &features) {
+    size_t totalLength = 0, totalWords = 0;
     std::map<std::wstring, int> wordFreq;
+    std::set<std::wstring> independentWords;
 
     for (const auto &line : chats) {
         auto wLine = string2wstring(line.content);
@@ -100,11 +152,8 @@ FeatureExtractor::extractFeatures(const std::vector<MessagePacket> &chats) {
             if (t.length() > 1) {
                 wordFreq[t]++;
                 totalWords++;
+                independentWords.insert(t);
             }
-        }
-        for (wchar_t c : wLine) {
-            if (ispunct(c))
-                totalPunctuations++;
         }
     }
 
@@ -112,16 +161,61 @@ FeatureExtractor::extractFeatures(const std::vector<MessagePacket> &chats) {
     for (int i = 0; i < topFreqWords.size(); i++) {
         auto word = topFreqWords[i];
         if (wordFreq.find(word) != wordFreq.end())
-            features["top" + std::to_string(i) + "FreqWord"] =
+            features["vocTop" + std::to_string(i) + "FreqWord"] =
                 (double)wordFreq.at(word) / totalWords;
         else
-            features["top" + std::to_string(i) + "FreqWord"] = 0;
+            features["vocTop" + std::to_string(i) + "FreqWord"] = 0;
     }
+    features["vocRichness"] = (double)independentWords.size() / totalWords;
+}
+void FeatureExtractor::sentenceLevel(const std::vector<MessagePacket> &chats,
+                                     std::map<std::string, double> &features) {
+    std::vector<long long> sentenceLength;
+    for (const auto &msg : chats) {
+        std::wstring wstrMsg = string2wstring(msg.content);
+        int cnt = 0;
+        for (int i = 0; i < wstrMsg.length(); i++) {
+            cnt++;
+            if (iswpunct(wstrMsg[i])) {
+                if (cnt > 1)
+                    sentenceLength.push_back(cnt);
+                cnt = 0;
+            }
+        }
+        if (cnt > 1)
+            sentenceLength.push_back(cnt);
+    }
+    double avgSenLen = 0, avgSenSquareLen = 0;
+    for (auto len : sentenceLength) {
+        avgSenLen += len;
+        avgSenSquareLen += len * len;
+    }
+    avgSenLen /= sentenceLength.size();
+    avgSenSquareLen /= sentenceLength.size();
 
-    features["avgMessageLength"] = (double)totalLength / chats.size();
-    features["punctuationRate"] = (double)totalPunctuations / chats.size();
+    features["senLenAvg"] = avgSenLen;
+    features["senLenVar"] = avgSenSquareLen - (avgSenLen * avgSenLen);
+}
 
-    return features;
+void FeatureExtractor::punctuationLevel(
+    const std::vector<MessagePacket> &chats,
+    std::map<std::string, double> &features) {
+    long long totalPunct = 0, totalQuestionMark = 0;
+    for (const auto &msg : chats) {
+
+        std::wstring wstrMsg = string2wstring(msg.content);
+        for (int i = 0; i < wstrMsg.length(); i++) {
+            if (iswpunct(wstrMsg[i])) {
+                if (wstrMsg[i] == '?' || wstrMsg[i] == L'？')
+                    totalQuestionMark++;
+                while (++i < wstrMsg.length() && iswpunct(wstrMsg[i]))
+                    ;
+                totalPunct++;
+            }
+        }
+    }
+    features["punRate"] = (double)totalPunct / chats.size();
+    features["punQuesMarkRate"] = (double)totalQuestionMark / chats.size();
 }
 
 void FeatureExtractor::initTopFreq(const std::vector<std::string> &chats) {

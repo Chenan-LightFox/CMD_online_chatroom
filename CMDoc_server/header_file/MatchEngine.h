@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-std::wstring string2wstring(std::string str);
+std::wstring string2wstring(const std::string &str);
 
 class MatchEngine {
   private:
@@ -43,6 +43,14 @@ class FeatureExtractor {
     std::map<std::string, double>
     extractFeatures(const std::vector<MessagePacket> &chats);
     void initTopFreq(const std::vector<std::string> &chats);
+    void interactionLevel(const std::vector<MessagePacket> &chats,
+                          std::map<std::string, double> &features);
+    void vocabularyLevel(const std::vector<MessagePacket> &chats,
+                         std::map<std::string, double> &features);
+    void sentenceLevel(const std::vector<MessagePacket> &chats,
+                       std::map<std::string, double> &features);
+    void punctuationLevel(const std::vector<MessagePacket> &chats,
+                          std::map<std::string, double> &features);
 };
 
 class Normalizer {

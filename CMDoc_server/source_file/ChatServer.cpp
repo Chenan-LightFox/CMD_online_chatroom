@@ -216,7 +216,7 @@ void ChatServer::getFeatures() {
         printInfo("User " + user->username + " Features:");
         std::string featureStr;
         for (auto i : user->features)
-            featureStr += std::to_string(i);
+            featureStr += std::to_string(i) + ' ';
         printInfo(featureStr + '\n');
     }
 }
