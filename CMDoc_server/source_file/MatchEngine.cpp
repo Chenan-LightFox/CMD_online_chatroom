@@ -1,5 +1,6 @@
 #include "../header_file/MatchEngine.h"
 #include <codecvt>
+#include <fstream>
 #include <functional>
 #include <locale>
 #include <queue>
@@ -8,9 +9,40 @@
 #include <vector>
 #include <windows.h>
 
+MatchEngine::MatchEngine(std::string dictFileName) {
+    std::ifstream dictFile(dictFileName);
+    if (!dictFile)
+        throw std::runtime_error("Failed to open dictionary file");
+    std::string word;
+    while (dictFile >> word) {
+        dict.push_back(word);
+    }
+}
+
 std::wstring string2wstring(std::string str) {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
     return converter.from_bytes(str);
+}
+
+void MatchEngine::getUsersFeature(std::vector<User *> users) {
+    Tokenizer tokenizer(dict);
+    FeatureExtractor featureExtractor(tokenizer, 5);
+    std::vector<std::string> chats;
+    for (auto user : users)
+        for (auto message : user->recentMessages)
+            chats.push_back(message.content);
+    featureExtractor.initTopFreq(chats);
+    std::vector<std::map<std::string, double>> featureMaps;
+    for (auto user : users) {
+        featureMaps.push_back(
+            featureExtractor.extractFeatures(user->recentMessages));
+    }
+    Normalizer::normalize(featureMaps, featureExtractor.allFeatures);
+    for (int i = 0; i < users.size(); i++) {
+        users[i]->features =
+            Normalizer::toVector(featureMaps[i], featureExtractor.allFeatures);
+    }
+    return;
 }
 
 Tokenizer::Tokenizer(std::vector<std::string> &dictVec) {
@@ -27,6 +59,7 @@ std::vector<std::wstring> Tokenizer::fmmTokenizer(const std::wstring &str) {
     while (pos < str.size()) {
         int len = min(str.size() - pos, maxWordLen);
         std::wstring word;
+        // TODO 英文/数字拆分
         while (len > 0) {
             std::wstring sub = str.substr(pos, len);
             if (dict.count(sub)) {
@@ -44,6 +77,14 @@ std::vector<std::wstring> Tokenizer::fmmTokenizer(const std::wstring &str) {
         }
     }
     return tokens;
+}
+FeatureExtractor::FeatureExtractor(Tokenizer tokenizer, int n)
+    : tokenizer(tokenizer), n(n) {
+    for (int i = 0; i < n; i++)
+        allFeatures.push_back("top" + std::to_string(i) + "FreqWord");
+    allFeatures.push_back("avgMessageLength");
+    allFeatures.push_back("avgMessageLength");
+    allFeatures.push_back("punctuationRate");
 }
 std::map<std::string, double>
 FeatureExtractor::extractFeatures(const std::vector<MessagePacket> &chats) {
@@ -85,8 +126,7 @@ FeatureExtractor::extractFeatures(const std::vector<MessagePacket> &chats) {
     return features;
 }
 
-void FeatureExtractor::getTopFreq(int n,
-                                  const std::vector<std::string> &chats) {
+void FeatureExtractor::initTopFreq(const std::vector<std::string> &chats) {
     std::vector<std::wstring> wChats;
     std::map<std::wstring, int> wordFreq;
     for (auto chat : chats)
