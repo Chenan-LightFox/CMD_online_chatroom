@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Chatroom.h"
 #include "MessagePacket.h"
+#include "User.h"
 #include <map>
 #include <set>
 #include <string>
@@ -9,7 +11,13 @@
 std::wstring string2wstring(std::string str);
 
 class MatchEngine {
+  private:
+    std::vector<std::string> dict;
+    MatchEngine(std::string dictFileName);
+
   public:
+    void getUsersFeature(std::vector<User *> users);
+    void getRoomFeature(ChatRoom &room);
 };
 
 class Tokenizer {
@@ -23,14 +31,19 @@ class Tokenizer {
 };
 
 class FeatureExtractor {
+    friend class MatchEngine;
+
   private:
     std::vector<std::wstring> topFreqWords;
     Tokenizer tokenizer;
+    std::vector<std::string> allFeatures;
+    int n;
 
   public:
+    FeatureExtractor(Tokenizer, int n);
     std::map<std::string, double>
     extractFeatures(const std::vector<MessagePacket> &chats);
-    void getTopFreq(int n, const std::vector<std::string> &chats);
+    void initTopFreq(const std::vector<std::string> &chats);
 };
 
 class Normalizer {

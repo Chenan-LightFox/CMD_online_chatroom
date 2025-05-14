@@ -1,23 +1,22 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <set>
-#include <iostream>
-#include <mutex>
 #include "MessagePacket.h"
 #include "User.h"
+#include <iostream>
+#include <mutex>
+#include <set>
+#include <string>
+#include <vector>
 
 class ChatRoom {
-public:
+  public:
     std::string roomName;
-    std::set<User*> users;
+    std::set<User *> users;
+    std::vector<double> features;
 
     ChatRoom(std::string name) : roomName(name) {}
 
-    void addUser(User* user) {
-        users.insert(user);
-    }
+    void addUser(User *user) { users.insert(user); }
 
-    void broadcast(MessagePacket& message);
+    void broadcast(MessagePacket &message);
 };
