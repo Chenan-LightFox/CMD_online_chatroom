@@ -3,7 +3,8 @@
 
 namespace fs = std::filesystem; // Only available in C++17 and later
 
-bool UserDataManager::loadUsers(const std::string &directory, std::map<std::string, User *> &users) {
+bool UserDataManager::loadUsers(const std::string &directory,
+                                std::map<std::string, User *> &users) {
     if (!fs::exists(directory))
         fs::create_directory(directory);
 
@@ -32,7 +33,8 @@ bool UserDataManager::loadUsers(const std::string &directory, std::map<std::stri
     return true;
 }
 
-bool UserDataManager::saveUsers(const std::string &directory, const User *user) {
+bool UserDataManager::saveUsers(const std::string &directory,
+                                const User *user) {
     if (!fs::exists(directory))
         fs::create_directory(directory);
 

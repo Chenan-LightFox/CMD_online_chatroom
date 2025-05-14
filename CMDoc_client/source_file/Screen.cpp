@@ -1,5 +1,8 @@
 #include "../header_file/Screen.h"
+#include "../header_file/PrintLog.h"
+#include <cstring>
 #include <iostream>
+#include <minwindef.h>
 #include <mutex>
 #include <queue>
 #include <rpcndr.h>
@@ -7,13 +10,12 @@
 #include <synchapi.h>
 Screen::Screen(short width, short height, double messageHeight)
     : width(width), height(height), messageHeight(messageHeight) {
+    system(((std::string)("mode con cols=" + std::to_string(width) +
+                          " lines=" + std::to_string(height)))
+               .c_str());
     // 获取默认标准显示缓冲区句柄
     coord = {0, 0};
     hOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    SMALL_RECT wrt = {0, 0, (short)(width - 1), (short)(height - 1)};
-    SetConsoleWindowInfo(hOutput, TRUE, &wrt);
-    SetConsoleScreenBufferSize(hOutput, {width, height});
-
     // 创建新的缓冲区
     hOutBuf = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE,
                                         FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -28,25 +30,13 @@ Screen::Screen(short width, short height, double messageHeight)
     cci.dwSize = 1;
     SetConsoleCursorInfo(hOutput, &cci);
     SetConsoleCursorInfo(hOutBuf, &cci);
-
-    // 双缓冲处理显示
-    DWORD bytes = 0;
-    char data[800];
-    while (1) {
-        for (char c = 'a'; c < 'z'; c++) {
-            system("cls");
-            for (int i = 0; i < 800; i++) {
-                printf("%c", c);
-            }
-            ReadConsoleOutputCharacterA(hOutput, data, 800, coord, &bytes);
-            WriteConsoleOutputCharacterA(hOutBuf, data, 800, coord, &bytes);
-        }
-    }
 }
 void Screen::draw() {
     DWORD bytes = 0;
     char data[3200];
-    int lastSize = messageQueue.size();
+    memset(data, 0, sizeof(data));
+    int lastSize = 0;
+
     while (true) {
         if (lastSize != messageQueue.size()) {
             std::unique_lock<std::mutex> lock(messageMutex);
@@ -59,15 +49,23 @@ void Screen::draw() {
                 newMsg.timestamp = msg.timestamp;
                 messageQueue.pop();
 
-                int line = 0;
-                for (int i = 0; msg.content[i] != '\0'; i++) {
-                    if (i % (width - 1) == 0) {
-                        newMsg.content[i + line] = '\n';
+                int line = 0, off = 0;
+                int j = 0, cnt = 0;
+                for (j = 0; msg.content[j] != '\0'; j++) {
+                    cnt++;
+                    if (cnt == (width - 1)) {
+                        newMsg.content[j + line] = '\n';
+                        off++;
+                        cnt = 0;
+                    }
+                    newMsg.content[j + line] = msg.content[j];
+                    if (msg.content[j] == '\n') {
+                        cnt = 0;
                         line++;
                     }
-                    newMsg.content[i + line] = msg.content[i];
                 }
-                line += 3;
+                newMsg.content[j + off] = '\0';
+                line += 3 + off;
                 lineCount += line;
                 showQueue.push({line, newMsg});
                 messageQueue.push(msg);
@@ -79,11 +77,15 @@ void Screen::draw() {
             }
             lastSize = messageQueue.size();
             lock.unlock();
-
-            SetConsoleCursorPosition(hOutput, {0, 0});
             std::lock_guard<std::mutex> lock2(coutMutex);
+
+            DWORD consoleSize = height * width;
+            FillConsoleOutputCharacter(hOutput, ' ', consoleSize, {0, 0},
+                                       &bytes);
+            SetConsoleCursorPosition(hOutput, {0, 0});
             while (!showQueue.empty()) {
                 auto msg = showQueue.front().second;
+                showQueue.pop();
                 tm localtime;
                 localtime_s(&localtime, &msg.timestamp);
                 std::string timestr = std::to_string(localtime.tm_hour) + ":" +
@@ -91,9 +93,8 @@ void Screen::draw() {
                                       std::to_string(localtime.tm_sec);
                 std::cout << timestr << ": ";
                 std::cout << "<" << msg.sender << "> \n"
-                          << msg.content << std::endl;
+                          << msg.content << "\n\n";
             }
-
             SetConsoleCursorPosition(hOutput,
                                      {0, (short)(height * messageHeight)});
             for (int i = 0; i < width; i++)
@@ -104,6 +105,8 @@ void Screen::draw() {
                                         &bytes);
             WriteConsoleOutputCharacterA(hOutBuf, data, sizeof(data), coord,
                                          &bytes);
+            SetConsoleCursorPosition(hOutBuf,
+                                     {0, (short)(height * messageHeight + 1)});
         }
         Sleep(10);
     }

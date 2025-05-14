@@ -170,8 +170,8 @@ void ChatServer::handleClient(SOCKET clientSocket) {
                 handleClientCommand(clientSocket);
                 continue;
             }
-            user->recentMessages.push_back(msg);
-            rooms[user->joinedRoom].messages.push_back(msg);
+            user->recentMessages.push_back(packet);
+            rooms[user->joinedRoom].messages.push_back(packet);
             printInfo("<" + user->username + "> [" +
                       rooms[user->joinedRoom].roomName + "] " + msg);
             rooms[user->joinedRoom].broadcast(

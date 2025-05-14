@@ -13,8 +13,9 @@ std::mutex messageMutex;
 
 int main() {
     ChatClient client("127.0.0.1", 8088);
-    Screen screen(80, 40);
+    Screen screen(100, 30);
     std::thread screenThread(&Screen::draw, &screen);
+    screenThread.detach();
     client.start();
 
     std::string message;
