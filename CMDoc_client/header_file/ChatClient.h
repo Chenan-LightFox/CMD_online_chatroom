@@ -8,7 +8,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-extern std::mutex cout_mutex;
+extern std::mutex coutMutex;
 class ChatClient {
   private:
     SOCKET clientSocket;
@@ -26,7 +26,8 @@ class ChatClient {
     void start();
     void stop();
     void test(MessagePacket packet) {
-        send(clientSocket, reinterpret_cast<char*>(&packet), sizeof(packet), 0);
+        send(clientSocket, reinterpret_cast<char *>(&packet), sizeof(packet),
+             0);
     }
     void receiveLoop(SOCKET);
 };

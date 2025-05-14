@@ -1,7 +1,11 @@
 #include "../header_file/ChatClient.h"
 #include "../header_file/PrintLog.h"
 #include <iostream>
+#include <mutex>
+#include <queue>
 #include <string>
+
+std::queue<MessagePacket> messageQueue;
 
 void ChatClient::receiveLoop(SOCKET clientSocket) {
     MessagePacket packet{};
@@ -10,16 +14,20 @@ void ChatClient::receiveLoop(SOCKET clientSocket) {
                        sizeof(packet), 0);
         if (ret <= 0)
             break;
+        {
+            std::lock_guard<std::mutex> lock(messageMutex);
+            messageQueue.push(packet);
+        }
         tm localtime;
         localtime_s(&localtime, &packet.timestamp);
-        std::string timestr=
-            std::to_string(localtime.tm_hour) + ":" +
-            std::to_string(localtime.tm_min) + ":" +
-            std::to_string(localtime.tm_sec);
+        std::string timestr = std::to_string(localtime.tm_hour) + ":" +
+                              std::to_string(localtime.tm_min) + ":" +
+                              std::to_string(localtime.tm_sec);
         {
-            std::lock_guard<std::mutex> lock(cout_mutex);
+            std::lock_guard<std::mutex> lock(coutMutex);
             std::cout << timestr << ": \n";
-            std::cout << "<" << packet.sender << "> " << packet.content << std::endl;
+            std::cout << "<" << packet.sender << "> " << packet.content
+                      << std::endl;
         }
     }
 }
