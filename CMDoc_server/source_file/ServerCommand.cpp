@@ -2,11 +2,6 @@
 #include "../header_file/Chatroom.h"
 #include "../header_file/PrintLog.h"
 #include <string>
-
-void FeaturesCommand::execute(const std::string &cmd, ChatServer &server) {
-    server.getFeatures();
-}
-
 void HelpCommand::execute(const std::string &cmd, ChatServer &server) {
     printInfo("Available commands:\n"
               "help - Show this help\n"
