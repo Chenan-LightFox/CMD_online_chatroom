@@ -17,7 +17,6 @@ class MatchEngine {
 
   public:
     void getUsersFeature(std::vector<User *> users);
-    void getRoomFeature(ChatRoom &room);
 };
 
 class Tokenizer {

@@ -45,14 +45,6 @@ void MatchEngine::getUsersFeature(std::vector<User *> users) {
     return;
 }
 
-void MatchEngine::getRoomFeature(ChatRoom &room) {
-    std::vector<User *> users;
-    for (auto user : room.users) {
-        users.push_back(user);
-    }
-    getUsersFeature(users);
-}
-
 Tokenizer::Tokenizer(std::vector<std::string> &dictVec) {
     maxWordLen = 0;
     for (auto word : dictVec) {
