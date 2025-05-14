@@ -2,10 +2,10 @@
 #include "../header_file/ChatServer.h"
 #include "../header_file/MessagePacket.h"
 #include "../header_file/PrintLog.h"
+#include <fstream>
 #include <map>
 #include <string>
 #include <vector>
-#include <fstream>
 
 extern std::mutex cout_mutex;
 
@@ -38,44 +38,47 @@ void ChatRoom::getRoomFeatures() {
     }
 }
 
-bool ChatRoom::roomExists(const std::string &name) {
-    for (auto room : rooms) {
-        if (room->roomName == name)
-            return true;
+int ChatRoom::roomExists(const std::string &name) {
+    for (int i = 0; i < rooms.size(); i++) {
+        if (rooms[i]->roomName == name)
+            return i;
     }
-    return false;
+    return -1;
 }
 
 bool ChatRoom::createRoom(const std::string &name) {
     std::lock_guard<std::mutex> lock(roomMutex);
-    if (roomExists(name))
+    if (!(~roomExists(name)))
         return false;
     rooms.push_back(new ChatRoom(name));
     saveRoomList();
     return true;
 }
 
-void ChatRoom::listRooms() {
-    printInfo("Now the server has " + std::to_string(rooms.size()) + " room(s): ");
+std::string ChatRoom::listRooms() {
+    std::string result;
+    result =
+        "Now the server has " + std::to_string(rooms.size()) + " room(s): ";
     for (auto room : rooms) {
-        printInfo(" > " + room->roomName);
+        result += " > " + room->roomName;
     }
+    return result;
 }
 
-void ChatRoom::getRoomMembers(const std::string &name){
+void ChatRoom::getRoomMembers(const std::string &name) {
     //
 }
 
-void ChatRoom::saveRoomList(){
-	std::ofstream file("room_list.txt", std::ios::trunc);
-	if (!file.is_open()) {
-		printError("Failed to open room_list.txt for writing.");
-		return;
-	}
-	for (auto room : rooms) {
-		file << room->roomName << "\n";
-	}
-	file.close();
+void ChatRoom::saveRoomList() {
+    std::ofstream file("room_list.txt", std::ios::trunc);
+    if (!file.is_open()) {
+        printError("Failed to open room_list.txt for writing.");
+        return;
+    }
+    for (auto room : rooms) {
+        file << room->roomName << "\n";
+    }
+    file.close();
 }
 
 void ChatRoom::loadRoomList() {

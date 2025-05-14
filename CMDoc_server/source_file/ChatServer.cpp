@@ -37,8 +37,46 @@ void ChatServer::handleClientCommand(std::string &command,
     } else if (command == "/usrname") {
         serverMessage(clientSocket, "You are: " + user->username + "\n");
         printInfo(user->username + " executed command /usrname");
-    } else if (command == "/room") {
-        // create, join, leave, list
+    } else if (command.find("/room") != std::string::npos) {
+        std::istringstream iss(command);
+        std::string command, argu;
+        iss >> command >> argu;
+
+        if (argu == "create") {
+            std::string roomName;
+            iss >> roomName;
+            if (roomName.empty()) {
+                serverMessage(clientSocket, "Room name is required!\n");
+                return;
+            }
+            ChatRoom::createRoom(roomName);
+        } else if (argu == "list") {
+            std::string roomName;
+            iss >> roomName;
+            if (roomName.empty()) {
+                serverMessage(clientSocket, ChatRoom::listRooms());
+                return;
+            }
+            ChatRoom::getRoomMembers(roomName);
+        } else if (argu == "join") {
+            std::string roomName;
+            iss >> roomName;
+            if (roomName.empty()) {
+                serverMessage(clientSocket, "Room name is required!\n");
+                return;
+            }
+            if (~ChatRoom::roomExists(roomName)) {
+                serverMessage(clientSocket, "Room does not exist!\n");
+                return;
+            }
+            user->joinedRoom = ChatRoom::roomExists(roomName);
+            rooms[user->joinedRoom]->users.insert(user);
+        } else {
+            serverMessage(clientSocket, R"(Not enough parameters!
+Available commands:
+create - Create a new room
+list - List all rooms)");
+        }
     } else if (command == "/features") {
         std::vector<std::pair<double, std::string>> dist;
         for (auto it = registeredUsers.begin(); it != registeredUsers.end();
