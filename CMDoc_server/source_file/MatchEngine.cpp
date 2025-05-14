@@ -77,7 +77,26 @@ std::vector<std::wstring> Tokenizer::fmmTokenizer(const std::wstring &str) {
     while (pos < str.size()) {
         int len = min(str.size() - pos, maxWordLen);
         std::wstring word;
-        // TODO 英文/数字拆分
+        if (str[pos] <= 'Z' && str[pos] >= 'A' ||
+            str[pos] <= 'z' && str[pos] >= 'a') { // 英文单词
+            std::string tok;
+            while (str[pos] <= 'Z' && str[pos] >= 'A' ||
+                   str[pos] <= 'z' && str[pos] >= 'a') {
+                tok += str[pos];
+                pos++;
+            }
+            tokens.push_back(string2wstring(tok));
+            continue;
+        }
+        if (str[pos] < '0' && str[pos] > '9') {
+            std::string tok;
+            while (str[pos] < '0' && str[pos] > '9') {
+                tok += str[pos];
+                pos++;
+            }
+            tokens.push_back(string2wstring(tok));
+            continue;
+        }
         while (len > 0) {
             std::wstring sub = str.substr(pos, len);
             if (dict.count(sub)) {
