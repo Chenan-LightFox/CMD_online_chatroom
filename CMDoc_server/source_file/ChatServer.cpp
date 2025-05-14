@@ -140,8 +140,7 @@ void ChatServer::handleClient(SOCKET clientSocket) {
         registeredUsers[username] = newUser;
         onlineUsers[clientSocket] = newUser;
         UserDataManager udm;
-        std::string directory = "users/" + username + ".dat";
-        udm.saveUsers(directory, newUser); // Save user data to file
+        udm.saveUsers("user", newUser); // Save user data to file
         serverMessage(clientSocket, "Registration successful.\n");
         printInfo("New user registered: " + username);
     } else if (command == "/login") {
