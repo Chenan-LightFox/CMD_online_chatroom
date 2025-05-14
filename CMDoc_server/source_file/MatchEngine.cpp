@@ -32,7 +32,7 @@ std::wstring string2wstring(const std::string &str) {
 
 void MatchEngine::getUsersFeature(std::vector<User *> users) {
     Tokenizer tokenizer(dict);
-    FeatureExtractor featureExtractor(tokenizer, 5);
+    FeatureExtractor featureExtractor(tokenizer, 10);
     std::vector<std::string> chats;
     for (auto user : users)
         for (auto message : user->recentMessages)
