@@ -53,12 +53,12 @@ void Screen::draw() {
                 int j = 0, cnt = 0;
                 for (j = 0; msg.content[j] != '\0'; j++) {
                     cnt++;
-                    if (cnt == (width - 1)) {
-                        newMsg.content[j + line] = '\n';
+                    if (cnt >= (width - 1) && msg.content[j] > 0) {
+                        newMsg.content[j + off] = '\n';
                         off++;
                         cnt = 0;
                     }
-                    newMsg.content[j + line] = msg.content[j];
+                    newMsg.content[j + off] = msg.content[j];
                     if (msg.content[j] == '\n') {
                         cnt = 0;
                         line++;
