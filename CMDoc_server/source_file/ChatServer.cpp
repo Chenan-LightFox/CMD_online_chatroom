@@ -117,7 +117,7 @@ void ChatServer::handleClient(SOCKET clientSocket) {
     serverMessage(clientSocket,
                   "Welcome! Please register or login.\nType '/register' or "
                   "'/login':\nType '/help' for help.\n");
-    printInfo("Say hello to the new client.");
+    printInfo("A new client connected successfully.");
     MessagePacket packet;
     int result = recv(clientSocket, reinterpret_cast<char *>(&packet),
                       sizeof(packet), 0);
@@ -157,8 +157,8 @@ void ChatServer::handleClient(SOCKET clientSocket) {
     }
 
     User *user = onlineUsers[clientSocket];
-    user->isConnected = true;
-    user->socket=clientSocket;
+    user->isConnected = true; // Set user as connected
+    user->socket=clientSocket; // Set user socket
     rooms[user->joinedRoom].users.insert(user);
 
     try { // The message loop
