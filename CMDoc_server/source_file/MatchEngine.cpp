@@ -41,12 +41,6 @@ void MatchEngine::getUsersFeature(std::vector<User *> users) {
     featureExtractor.initTopFreq(chats);
     std::vector<std::map<std::string, double>> featureMaps;
     for (auto user : users) {
-        if (user->recentMessages.empty()) {
-            std::unique_lock<std::mutex> lock(user->featureMutex);
-            user->features =
-                std::vector<double>(featureExtractor.allFeatures.size(), 0);
-            continue;
-        }
         featureMaps.push_back(
             featureExtractor.extractFeatures(user->recentMessages));
     }
