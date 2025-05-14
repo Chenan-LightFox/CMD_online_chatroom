@@ -4,6 +4,7 @@
 #include "../header_file/MatchEngine.h"
 #include "../header_file/UserDataManager.h"
 #include "../header_file/printLog.h"
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -86,6 +87,8 @@ list - List all rooms)");
             std::lock_guard<std::mutex> lock(it->second->featureMutex);
             double sim = Similarity::cosineSimilarity(user->features,
                                                       it->second->features);
+            if (sim > 1 || sim < -1)
+                continue;
             dist.push_back({sim, it->first});
         }
         std::sort(dist.begin(), dist.end(),
@@ -103,6 +106,8 @@ list - List all rooms)");
             std::cout << rooms[i]->features.size() << std::endl;
             double sim = Similarity::cosineSimilarity(user->features,
                                                       rooms[i]->features);
+            if (sim > 1 || sim < -1)
+                continue;
             dist.push_back({sim, rooms[i]->roomName});
         }
         std::sort(dist.begin(), dist.end(),
