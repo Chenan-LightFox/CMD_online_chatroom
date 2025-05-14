@@ -13,7 +13,6 @@
 /build
 /.clang-format
 /.clangd
-/CMDoc_client
 /CMDoc_client/.vs/CMDoc_client
 /CMDoc_client/.vs/CMDoc_client/FileContentIndex
 /CMDoc_client/.vs/CMDoc_client/FileContentIndex/a83be7aa-e1ae-4153-b66b-7af51c9de154.vsidx
