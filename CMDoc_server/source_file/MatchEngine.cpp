@@ -15,8 +15,10 @@
 MatchEngine::MatchEngine(std::string dictFileName) {
     std::ifstream dictFile(dictFileName);
     setlocale(LC_ALL, "chs");
-    if (!dictFile)
+    if (!dictFile) {
         throw std::runtime_error("Failed to open dictionary file");
+    }
+
     printInfo("[MatchEngine]Loading dictionary...");
     std::string word;
     while (dictFile >> word) {
@@ -36,6 +38,9 @@ void MatchEngine::getUsersFeature(std::vector<User *> users) {
     FeatureExtractor featureExtractor(tokenizer, 5);
     printInfo("[MatchEngine]Loading chats...");
     std::vector<std::string> chats;
+    for (auto user : users)
+        for (auto message : user->recentMessages)
+            chats.push_back(message.content);
     printInfo("[MatchEngine]Init featureExtractor...");
     featureExtractor.initTopFreq(chats);
     printInfo("[MatchEngine]Extracting feature...");
@@ -130,10 +135,6 @@ FeatureExtractor::extractFeatures(const std::vector<MessagePacket> &chats) {
     sentenceLevel(chats, features);
     punctuationLevel(chats, features);
 
-    for (const auto &[key, value] : features) {
-        printInfo(key + " " + std::to_string(value));
-    }
-
     return features;
 }
 
@@ -151,6 +152,8 @@ void FeatureExtractor::interactionLevel(
         startStamp = min(startStamp, msg.timestamp);
         endStamp = max(endStamp, msg.timestamp);
     }
+    if (endStamp == startStamp)
+        endStamp++; // avoid division by zero
     features["interAvgReplyHour"] = (double)avgReplyHour / chats.size();
     features["interReplyFreq"] = (double)chats.size() / (endStamp - startStamp);
 }

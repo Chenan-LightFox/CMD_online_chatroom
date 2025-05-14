@@ -28,6 +28,8 @@ class ChatClient {
     void start();
     void stop();
     void sendPackage(MessagePacket packet) {
+        if (packet.content[0] == '\0' || packet.content[0] == '\n')
+            return;
         int result = send(clientSocket, reinterpret_cast<char *>(&packet),
                           sizeof(packet), 0);
         if (result == SOCKET_ERROR)

@@ -1,8 +1,9 @@
 #include "MessagePacket.h"
 #include <mutex>
-#include <queue>
+#include <stack>
 #include <string>
-extern std::queue<MessagePacket> messageQueue;
+extern std::stack<MessagePacket> messageStack;
+extern std::stack<MessagePacket> messageStackBuf;
 extern std::mutex messageMutex;
 class ChatHistory {
   public:

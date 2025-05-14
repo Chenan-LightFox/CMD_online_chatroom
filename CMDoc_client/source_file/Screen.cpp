@@ -1,18 +1,21 @@
 #include "../header_file/Screen.h"
 #include "../header_file/PrintLog.h"
+#include <conio.h>
 #include <cstring>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <minwindef.h>
 #include <mutex>
-#include <queue>
 #include <rpcndr.h>
 #include <string>
 #include <synchapi.h>
+#include <winuser.h>
+
 Screen::Screen(std::string userName, short width, short height,
                double messageHeight)
     : width(width), height(height), messageHeight(messageHeight),
-      userName(userName) {
+      userName(userName), bufMsg(0) {
     system(((std::string)("mode con cols=" + std::to_string(width) +
                           " lines=" + std::to_string(height)))
                .c_str());
@@ -39,18 +42,24 @@ void Screen::draw() {
     char *data = new char[height * width];
     memset(data, 0, height * width);
     int lastSize = 0;
-
+    int lastBuf = 0;
     while (true) {
-        if (lastSize != messageQueue.size()) {
-            std::unique_lock<std::mutex> lock(messageMutex);
-            std::queue<std::pair<int, MessagePacket>> showQueue;
-            int msgCount = messageQueue.size();
+        std::unique_lock<std::mutex> lock(messageMutex);
+        if (lastSize != messageStack.size() || lastBuf != bufMsg) {
+            lastBuf = bufMsg;
+            std::deque<std::pair<int, MessagePacket>> showQueue;
+            for (int i = 0; i < bufMsg && !messageStack.empty(); i++) {
+                messageStackBuf.push(messageStack.top());
+                messageStack.pop();
+            }
+
             int lineCount = 0;
-            for (int i = 0; i < msgCount; i++) {
-                auto msg = messageQueue.front();
+            while (!messageStack.empty()) {
+                auto msg = messageStack.top();
                 MessagePacket newMsg(msg.sender);
                 newMsg.timestamp = msg.timestamp;
-                messageQueue.pop();
+                messageStack.pop();
+                messageStackBuf.push(msg);
 
                 int line = 0, off = 0;
                 int j = 0, cnt = 0;
@@ -70,15 +79,20 @@ void Screen::draw() {
                 newMsg.content[j + off] = '\0';
                 line += 3 + off;
                 lineCount += line;
-                showQueue.push({line, newMsg});
-                messageQueue.push(msg);
+                showQueue.push_back({line, newMsg});
+                if (lineCount > height * messageHeight) {
+                    showQueue.pop_back();
+                    lineCount -= line;
+                    messageStack.push(messageStackBuf.top());
+                    messageStackBuf.pop();
+                    break;
+                }
             }
-            while (lineCount > height * messageHeight && showQueue.size() > 1) {
-                lineCount -= showQueue.front().first;
-                showQueue.pop();
-                messageQueue.pop();
+            while (!messageStackBuf.empty()) {
+                messageStack.push(messageStackBuf.top());
+                messageStackBuf.pop();
             }
-            lastSize = messageQueue.size();
+            lastSize = messageStack.size();
             lock.unlock();
             std::lock_guard<std::mutex> lock2(coutMutex);
 
@@ -87,8 +101,8 @@ void Screen::draw() {
                                        &bytes);
             SetConsoleCursorPosition(hOutput, {0, 0});
             while (!showQueue.empty()) {
-                auto msg = showQueue.front().second;
-                showQueue.pop();
+                auto msg = showQueue.back().second;
+                showQueue.pop_back();
                 tm localtime;
                 localtime_s(&localtime, &msg.timestamp);
                 std::string timestr = std::to_string(localtime.tm_hour) + ":" +
@@ -122,3 +136,4 @@ void Screen::draw() {
         Sleep(10);
     }
 }
+void Screen::setBufMsg() { int ch; }
