@@ -32,23 +32,22 @@ void RoomCommand::execute(const std::string &cmd, ChatServer &server) {
         std::string roomName;
         iss >> roomName;
         if (roomName.empty()) {
-            // ChatRoom::listRooms();
+            ChatRoom::listRooms();
             return;
         }
-        // ChatRoom::getRoomMembers(roomName);
+        ChatRoom::getRoomMembers(roomName);
 	}
 	else {
         printWarning("Not enough parameters!\n"
                      "Available commands:\n"
                      "create - Create a new room\n"
-                     "join - Join a room\n"
-                     "leave - Leave a room\n"
-                     "list - List all rooms\n"
-                     "remove - Remove a room\n");
+                     "list - List all rooms\n");
 	}
     
 }
 
 void StopCommand::execute(const std::string &cmd, ChatServer& server) {
     server.stop();
+    system("pause");
+    exit(0);
 }

@@ -1,9 +1,11 @@
 #include "../header_file/Chatroom.h"
 #include "../header_file/ChatServer.h"
 #include "../header_file/MessagePacket.h"
+#include "../header_file/PrintLog.h"
 #include <map>
 #include <string>
 #include <vector>
+#include <fstream>
 
 extern std::mutex cout_mutex;
 
@@ -37,7 +39,6 @@ void ChatRoom::getRoomFeatures() {
 }
 
 bool ChatRoom::roomExists(const std::string &name) {
-    std::lock_guard<std::mutex> lock(roomMutex);
     for (auto room : rooms) {
         if (room->roomName == name)
             return true;
@@ -50,19 +51,48 @@ bool ChatRoom::createRoom(const std::string &name) {
     if (roomExists(name))
         return false;
     rooms.push_back(new ChatRoom(name));
+    saveRoomList();
     return true;
 }
-/*
+
 void ChatRoom::listRooms() {
+    printInfo("Now the server has " + std::to_string(rooms.size()) + " room(s): ");
     for (auto room : rooms) {
-        //
+        printInfo(" > " + room->roomName);
     }
 }
 
-void ChatRoom::getRoomMembers(const std::string name){
+void ChatRoom::getRoomMembers(const std::string &name){
     //
 }
-*/
+
+void ChatRoom::saveRoomList(){
+	std::ofstream file("room_list.txt", std::ios::trunc);
+	if (!file.is_open()) {
+		printError("Failed to open room_list.txt for writing.");
+		return;
+	}
+	for (auto room : rooms) {
+		file << room->roomName << "\n";
+	}
+	file.close();
+}
+
+void ChatRoom::loadRoomList() {
+    std::ifstream file("room_list.txt");
+    if (!file.is_open()) {
+        printError("Failed to open room_list.txt for reading.");
+        return;
+    }
+    std::string roomName;
+    while (std::getline(file, roomName)) {
+        if (!roomName.empty()) {
+            createRoom(roomName);
+        }
+    }
+    file.close();
+}
+
 std::vector<std::string> ChatRoom::getRoomNames() {
     std::lock_guard<std::mutex> lock(roomMutex);
     std::vector<std::string> names;

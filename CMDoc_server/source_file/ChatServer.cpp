@@ -59,6 +59,7 @@ void ChatServer::handleClientCommand(SOCKET clientSocket) {
 void ChatServer::start() {
     UserDataManager udm;
     udm.loadUsers("user", registeredUsers); // Load user data from file
+    ChatRoom::loadRoomList(); // Load room list from file
 
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -93,8 +94,6 @@ void ChatServer::start() {
 
     running = true; // Set server state to running
     printInfo("Server started on port " + std::to_string(port));
-
-    // rooms.push_back(new ChatRoom("Lobby")); // Initialize rooms
 
     // Load chat history and get chat features for each room
     for (auto room : rooms) {

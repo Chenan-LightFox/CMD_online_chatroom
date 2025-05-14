@@ -30,12 +30,12 @@ class ChatRoom {
     void broadcast(MessagePacket &message);
     void getRoomFeatures();
 
-
-
     static bool roomExists(const std::string &name);
     static bool createRoom(const std::string &name);
-    // static void listRooms();
-    // static void getRoomMembers(roomName);
+    static void listRooms();
+    static void getRoomMembers(const std::string &name);
+    static void saveRoomList();
+    static void loadRoomList();
     static std::vector<std::string> getRoomNames();
 };
 
