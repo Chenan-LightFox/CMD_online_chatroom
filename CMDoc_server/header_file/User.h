@@ -12,7 +12,6 @@ class User {
     std::string username;
     std::string password;
     SOCKET socket;
-    std::map<std::string, double> interestProfile;
     std::vector<MessagePacket> recentMessages;
     std::vector<double> features;
     int joinedRoom = 0;
