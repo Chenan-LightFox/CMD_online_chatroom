@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 project (CMDoc_client) 
  
 #搜索对应的头文件 并存储在 HEADER_FILES变量中
-file(GLOB HEADER_FILES ./header_files/*.h)
+file(GLOB HEADER_FILES ./header_file/*.h)
 #搜索对应的CPP文件 并存储在 SRC_FILES_FILES变量中
 file(GLOB_RECURSE SRC_FILES ./source_file/*.cpp)
  

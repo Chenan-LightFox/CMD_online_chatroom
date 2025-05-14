@@ -14,8 +14,14 @@ class ChatRoom {
     std::set<User *> users;
     std::vector<double> features;
     std::vector<MessagePacket> messages;
-
+    std::mutex messageMutex;
     ChatRoom(std::string name) : roomName(name) {}
+    ChatRoom(const ChatRoom &room) {
+        roomName = room.roomName;
+        users = room.users;
+        features = room.features;
+        messages = room.messages;
+    }
 
     void addUser(User *user) { users.insert(user); }
 

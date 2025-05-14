@@ -1,15 +1,15 @@
 #include "../header_file/ChatServer.h"
-#include "../header_file/ChatRoom.h"
-#include "../header_file/MatchEngine.h"
-#include "../header_file/printLog.h"
-#include "../header_file/UserDataManager.h"
 #include "../header_file/ChatHistoryManager.h"
+#include "../header_file/Chatroom.h"
+#include "../header_file/MatchEngine.h"
+#include "../header_file/UserDataManager.h"
+#include "../header_file/printLog.h"
 #include <string.h>
 #include <string>
 #include <vector>
 
 extern std::mutex cout_mutex;
-std::vector<ChatRoom> rooms;
+std::vector<ChatRoom *> rooms;
 
 void ChatServer::sendToClient(SOCKET clientSocket, MessagePacket &message) {
     send(clientSocket, reinterpret_cast<char *>(&message), sizeof(message), 0);
@@ -89,14 +89,15 @@ void ChatServer::start() {
     running = true; // Set server state to running
     printInfo("Server started on port " + std::to_string(port));
 
-    rooms.push_back(ChatRoom("Lobby")); // Initialize rooms
+    rooms.push_back(new ChatRoom("Lobby")); // Initialize rooms
 
     // Load chat history and get chat features for each room
-    for (ChatRoom &r : rooms) { 
-		r.getRoomFeatures();
-        std::thread saveThread(ChatHistoryManager::saveHistory, r.roomName);
+    for (auto room : rooms) {
+        ChatHistoryManager::loadHistory(room, registeredUsers);
+        room->getRoomFeatures();
+        std::thread saveThread(ChatHistoryManager::saveHistory, room);
         saveThread.detach();
-	}
+    }
 
     while (running) {
         if (!running)
@@ -174,7 +175,7 @@ void ChatServer::handleClient(SOCKET clientSocket) {
     User *user = onlineUsers[clientSocket];
     user->isConnected = true;    // Set user as connected
     user->socket = clientSocket; // Set user socket
-    rooms[user->joinedRoom].users.insert(user);
+    rooms[user->joinedRoom]->users.insert(user);
 
     try { // The message loop
         while ((result = recv(clientSocket, reinterpret_cast<char *>(&packet),
@@ -186,10 +187,14 @@ void ChatServer::handleClient(SOCKET clientSocket) {
                 continue;
             }
             user->recentMessages.push_back(packet);
-            rooms[user->joinedRoom].messages.push_back(packet);
+            {
+                std::lock_guard<std::mutex> lock(
+                    rooms[user->joinedRoom]->messageMutex);
+                rooms[user->joinedRoom]->messages.push_back(packet);
+            }
             printInfo("<" + user->username + "> [" +
-                      rooms[user->joinedRoom].roomName + "] " + msg);
-            rooms[user->joinedRoom].broadcast(
+                      rooms[user->joinedRoom]->roomName + "] " + msg);
+            rooms[user->joinedRoom]->broadcast(
                 packet); // Broadcast message to users
         }
         if (result == SOCKET_ERROR) {
@@ -205,7 +210,7 @@ void ChatServer::handleClient(SOCKET clientSocket) {
         printInfo("User disconnected: " + onlineUsers[clientSocket]->username);
         onlineUsers.erase(clientSocket);
     }
-    rooms[user->joinedRoom].users.erase(user);
+    rooms[user->joinedRoom]->users.erase(user);
     onlineUsers.erase(clientSocket);
     user->isConnected = false;
     closesocket(clientSocket);

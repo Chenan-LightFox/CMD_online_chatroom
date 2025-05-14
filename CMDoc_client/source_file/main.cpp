@@ -29,7 +29,7 @@ int main() {
     std::thread saveThread(ChatHistory::saveHistory, "history.dat");
     saveThread.detach();
 
-    Screen screen(100, 30);
+    Screen screen(userName, 100, 30);
     std::thread screenThread(&Screen::draw, &screen);
     screenThread.detach();
     client.start();
