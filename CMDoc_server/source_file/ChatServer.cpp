@@ -4,8 +4,13 @@
 #include "../header_file/MatchEngine.h"
 #include "../header_file/UserDataManager.h"
 #include "../header_file/printLog.h"
+#include <functional>
+#include <memory>
+#include <mutex>
 #include <string.h>
 #include <string>
+#include <synchapi.h>
+#include <utility>
 #include <vector>
 
 extern std::mutex cout_mutex;
@@ -20,37 +25,41 @@ void ChatServer::serverMessage(SOCKET clientSocket,
     sendToClient(clientSocket, msg);
 }
 
-void ChatServer::handleClientCommand(SOCKET clientSocket) {
+void ChatServer::handleClientCommand(std::string &command,
+                                     SOCKET clientSocket) {
     User *user = onlineUsers[clientSocket];
-
-    // Get the content of the command
-    MessagePacket packet;
-    int result = recv(clientSocket, reinterpret_cast<char *>(&packet),
-                      sizeof(packet), 0);
-    if (result <= 0) {
-        closesocket(clientSocket);
-        return;
-    }
-    std::string input(packet.content);
-    std::istringstream iss(input);
-    std::string command;
-    iss >> command;
-
     // Handle the command
     if (command == "/help") {
         serverMessage(clientSocket,
                       "Available commands:\n/help - show this help\n/usrname "
                       "- display your username\n");
         printInfo(user->username + "executed command /help");
-    }
-    else if (command == "/usrname") {
+    } else if (command == "/usrname") {
         serverMessage(clientSocket, "You are: " + user->username + "\n");
         printInfo(user->username + " executed command /usrname");
-    }
-    else if (command == "/room") {
+    } else if (command == "/room") {
         // create, join, leave, list
-    }
-    else {
+    } else if (command == "/features") {
+        std::vector<std::pair<double, std::string>> dist;
+        for (auto it = registeredUsers.begin(); it != registeredUsers.end();
+             it++) {
+            if (it->first == user->username)
+                continue;
+            std::lock_guard<std::mutex> lock(it->second->featureMutex);
+            double sim = Similarity::cosineSimilarity(user->features,
+                                                      it->second->features);
+            dist.push_back({sim, it->first});
+        }
+        std::sort(dist.begin(), dist.end(),
+                  std::greater<std::pair<double, std::string>>());
+        std::string result = "Top 5 similarity:\n";
+        for (int i = 0; i < 5 && i < dist.size(); i++) {
+            result +=
+                dist[i].second + ": " + std::to_string(dist[i].first) + "\n";
+        }
+        serverMessage(clientSocket, result);
+        printInfo(user->username + " executed command /features");
+    } else {
         serverMessage(clientSocket, "Unknown command.\n");
         printInfo(user->username + " sent an unknown command: " + command);
     }
@@ -59,7 +68,7 @@ void ChatServer::handleClientCommand(SOCKET clientSocket) {
 void ChatServer::start() {
     UserDataManager udm;
     udm.loadUsers("user", registeredUsers); // Load user data from file
-    ChatRoom::loadRoomList(); // Load room list from file
+    ChatRoom::loadRoomList();               // Load room list from file
 
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -98,10 +107,12 @@ void ChatServer::start() {
     // Load chat history and get chat features for each room
     for (auto room : rooms) {
         ChatHistoryManager::loadHistory(room, registeredUsers);
-        room->getRoomFeatures();
         std::thread saveThread(ChatHistoryManager::saveHistory, room);
         saveThread.detach();
     }
+    std::thread featureThread(&ChatServer::getFeatures,
+                              this); // Start feature extraction thread
+    featureThread.detach();
 
     while (running) {
         if (!running)
@@ -187,7 +198,7 @@ void ChatServer::handleClient(SOCKET clientSocket) {
             std::string msg = packet.content;
             strcpy_s(packet.sender, user->username.c_str());
             if (msg[0] == '/') { // Check if the message is a command
-                handleClientCommand(clientSocket);
+                handleClientCommand(msg, clientSocket);
                 continue;
             }
             user->recentMessages.push_back(packet);
@@ -230,17 +241,28 @@ void ChatServer::stop() {
 }
 
 void ChatServer::getFeatures() {
-    std::vector<User *> users;
-    for (auto it = registeredUsers.begin(); it != registeredUsers.end(); it++) {
-        users.push_back(it->second);
-    }
+
     MatchEngine match("xiandaihanyuchangyongcibiao.txt");
-    match.getUsersFeature(users);
-    for (auto user : users) {
-        printInfo("User " + user->username + " Features:");
-        std::string featureStr;
-        for (auto i : user->features)
-            featureStr += std::to_string(i) + ' ';
-        printInfo(featureStr + '\n');
+    while (true) {
+        std::vector<User *> users;
+        for (auto it = registeredUsers.begin(); it != registeredUsers.end();
+             it++) {
+            users.push_back(it->second);
+        }
+        match.getUsersFeature(users);
+        for (auto room : rooms) {
+            room->getRoomFeatures();
+        }
+        for (auto user : users) {
+            printInfo("User " + user->username + " Features:");
+            std::string featureStr;
+
+            std::unique_lock<std::mutex> lock(user->featureMutex);
+            for (auto i : user->features)
+                featureStr += std::to_string(i) + ' ';
+            lock.unlock();
+            printInfo(featureStr + '\n');
+        }
+        Sleep(10000);
     }
 }

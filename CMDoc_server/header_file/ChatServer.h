@@ -28,7 +28,7 @@ class ChatServer {
     void stop();
 
     void handleClient(SOCKET clientSocket);
-    void handleClientCommand(SOCKET clientSocket);
+    void handleClientCommand(std::string &command, SOCKET clientSocket);
     static void sendToClient(SOCKET clientSocket, MessagePacket &message);
     static void serverMessage(SOCKET clientSocket, const std::string &message);
     void getFeatures();
