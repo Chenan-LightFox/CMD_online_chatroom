@@ -46,9 +46,6 @@ void MatchEngine::getUsersFeature(std::vector<User *> users) {
     }
     Normalizer::normalize(featureMaps, featureExtractor.allFeatures);
     for (int i = 0; i < users.size(); i++) {
-        if (users[i]->recentMessages.empty()) {
-            continue;
-        }
         std::unique_lock<std::mutex> lock(users[i]->featureMutex);
         users[i]->features =
             Normalizer::toVector(featureMaps[i], featureExtractor.allFeatures);
@@ -285,6 +282,8 @@ void Normalizer::normalize(
         min_val[f] = 1e9;
         max_val[f] = -1e9;
         for (const auto &vec : featureMaps) {
+            if (vec.find(f) == vec.end())
+                continue;
             min_val[f] = min(min_val[f], vec.at(f));
             max_val[f] = max(max_val[f], vec.at(f));
         }
@@ -292,7 +291,7 @@ void Normalizer::normalize(
 
     for (auto &vec : featureMaps) { // 标准化
         for (const auto &f : allFeatures) {
-            if (max_val[f] != min_val[f]) {
+            if (vec.find(f) != vec.end() && max_val[f] != min_val[f]) {
                 vec[f] = (vec[f] - min_val[f]) / (max_val[f] - min_val[f]);
             } else {
                 vec[f] = 0.0;
@@ -307,6 +306,10 @@ Normalizer::toVector(const std::map<std::string, double> &featureMap,
 
     std::vector<double> v;
     for (const auto &f : allFeatures) {
+        if (featureMap.find(f) == featureMap.end()) {
+            v.push_back(0.0);
+            continue;
+        }
         v.push_back(featureMap.at(f));
     }
     return v;

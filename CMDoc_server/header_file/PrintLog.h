@@ -20,7 +20,7 @@ inline void printWarning(const std::string &warning) {
     SetConsoleTextAttribute(hConsole,
                             FOREGROUND_RED |
                                 FOREGROUND_GREEN); // Set text color to yellow
-    std::cout << "[SERVER_WARN]\t" << warning << std::endl;
+    // std::cout << "[SERVER_WARN]\t" << warning << std::endl;
     SetConsoleTextAttribute(hConsole,
                             FOREGROUND_GREEN | FOREGROUND_RED |
                                 FOREGROUND_BLUE); // Set text color to white
