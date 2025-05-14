@@ -31,7 +31,7 @@ int main() {
     std::thread saveThread(ChatHistory::saveHistory, "history.dat");
     saveThread.detach();
 
-    Screen screen(userName, 130, 30);
+    Screen screen(userName, 120, 30);
     std::thread screenThread(&Screen::draw, &screen);
     screenThread.detach();
 
