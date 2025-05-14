@@ -38,9 +38,6 @@ void MatchEngine::getUsersFeature(std::vector<User *> users) {
     FeatureExtractor featureExtractor(tokenizer, 5);
     printInfo("[MatchEngine]Loading chats...");
     std::vector<std::string> chats;
-    for (auto user : users)
-        for (auto message : user->recentMessages)
-            chats.push_back(message.content);
     printInfo("[MatchEngine]Init featureExtractor...");
     featureExtractor.initTopFreq(chats);
     printInfo("[MatchEngine]Extracting feature...");

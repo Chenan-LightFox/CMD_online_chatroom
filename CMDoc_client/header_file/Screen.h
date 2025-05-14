@@ -2,6 +2,7 @@
 #include "MessagePacket.h"
 #include <mutex>
 #include <queue>
+#include <string>
 #include <windows.h>
 
 extern std::mutex coutMutex;
@@ -15,8 +16,10 @@ class Screen {
     short width;
     short height;
     double messageHeight;
+    std::string userName;
 
   public:
-    Screen(short width, short height, double messageHeight = 0.7);
+    Screen(std::string userName, short width, short height,
+           double messageHeight = 0.7);
     void draw();
 };

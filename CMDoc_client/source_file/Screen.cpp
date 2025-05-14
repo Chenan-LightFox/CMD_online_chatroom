@@ -1,6 +1,7 @@
 #include "../header_file/Screen.h"
 #include "../header_file/PrintLog.h"
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <minwindef.h>
 #include <mutex>
@@ -8,8 +9,10 @@
 #include <rpcndr.h>
 #include <string>
 #include <synchapi.h>
-Screen::Screen(short width, short height, double messageHeight)
-    : width(width), height(height), messageHeight(messageHeight) {
+Screen::Screen(std::string userName, short width, short height,
+               double messageHeight)
+    : width(width), height(height), messageHeight(messageHeight),
+      userName(userName) {
     system(((std::string)("mode con cols=" + std::to_string(width) +
                           " lines=" + std::to_string(height)))
                .c_str());
@@ -91,9 +94,17 @@ void Screen::draw() {
                 std::string timestr = std::to_string(localtime.tm_hour) + ":" +
                                       std::to_string(localtime.tm_min) + ":" +
                                       std::to_string(localtime.tm_sec);
-                std::cout << timestr << ": ";
-                std::cout << "<" << msg.sender << "> \n"
-                          << msg.content << "\n\n";
+                if (userName == msg.sender) {
+                    std::cout << std::right << std::setw(width)
+                              << (timestr + ": " + "<" + msg.sender + ">")
+                              << "\n";
+                    std::cout << std::right << std::setw(width) << msg.content
+                              << "\n\n";
+                } else {
+                    std::cout << timestr << ": ";
+                    std::cout << "<" << msg.sender << "> \n"
+                              << msg.content << "\n\n";
+                }
             }
             SetConsoleCursorPosition(hOutput,
                                      {0, (short)(height * messageHeight)});
