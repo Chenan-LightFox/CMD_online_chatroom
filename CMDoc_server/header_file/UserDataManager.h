@@ -9,6 +9,6 @@
 
 class UserDataManager {
 public:
-    bool loadUsers(const std::string &filename, std::map<std::string, User *> &users);
-    bool saveUsers(const std::string &filename, const std::map<std::string, User *> &users);
+    bool loadUsers(const std::string &directory, std::map<std::string, User *> &users);
+    bool saveUsers(const std::string &directory, const User *user);
 };
