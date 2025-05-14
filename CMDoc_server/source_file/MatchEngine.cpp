@@ -274,6 +274,11 @@ void FeatureExtractor::initTopFreq(const std::vector<std::string> &chats) {
         topFreqWords.push_back(topFreq.top().second);
         topFreq.pop();
     }
+    if (topFreqWords.size() < n) {
+        for (int i = topFreqWords.size(); i < n; i++) {
+            topFreqWords.push_back(L"");
+        }
+    }
     return;
 }
 
