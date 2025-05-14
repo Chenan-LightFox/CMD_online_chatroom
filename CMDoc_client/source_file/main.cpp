@@ -1,4 +1,5 @@
 #include "../header_file/ChatClient.h"
+#include "../header_file/ChatHistory.h"
 #include "../header_file/PrintLog.h"
 #include "../header_file/Screen.h"
 #include <iostream>
@@ -11,6 +12,8 @@ std::mutex coutMutex;
 std::mutex messageMutex;
 
 int main() {
+    ChatHistory::loadHistory("history.dat");
+
     std::string userName, passWord;
     bool isRegistered = true;
     std::cout << "Enter Username(Enter 'Register' for register):";
@@ -23,6 +26,9 @@ int main() {
     std::cout << "Enter Password:";
     std::cin >> passWord;
     ChatClient client("127.0.0.1", 8088, userName);
+    std::thread saveThread(ChatHistory::saveHistory, "history.dat");
+    saveThread.detach();
+
     Screen screen(100, 30);
     std::thread screenThread(&Screen::draw, &screen);
     screenThread.detach();
