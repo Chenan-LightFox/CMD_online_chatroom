@@ -83,7 +83,7 @@ std::vector<std::wstring> Tokenizer::fmmTokenizer(const std::wstring &str) {
             tokens.push_back(tok);
             continue;
         }
-        if (str[pos] < '0' && str[pos] > '9') {
+        if (str[pos] >= '0' && str[pos] <= '9') {
             std::wstring tok;
             while (str[pos] < '0' && str[pos] > '9') {
                 tok += str[pos];
