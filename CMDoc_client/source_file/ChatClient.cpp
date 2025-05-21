@@ -4,6 +4,8 @@
 #include <queue>
 #include <stack>
 #include <string>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 
 std::stack<MessagePacket> messageStack;
 std::stack<MessagePacket> messageStackBuf;
@@ -22,17 +24,17 @@ void ChatClient::receiveLoop(SOCKET clientSocket) {
     }
 }
 void ChatClient::start() {
+    PADDRINFOA addrInfo;
+    GetAddrInfoA(ip.c_str(), std::to_string(port).c_str(), nullptr, &addrInfo);
+
     WSADATA wsa;
     WSAStartup(MAKEWORD(2, 2), &wsa);
 
     clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    addrInfo->ai_addr->sa_family = AF_INET;
 
-    sockaddr_in serverAddr{};
-    serverAddr.sin_family = AF_INET;
-    inet_pton(AF_INET, ip.c_str(), &serverAddr.sin_addr);
-    serverAddr.sin_port = htons(port);
-
-    if (connect(clientSocket, (sockaddr *)&serverAddr, sizeof(serverAddr))) {
+    if (connect(clientSocket, addrInfo->ai_addr,
+                sizeof(*(addrInfo->ai_addr)))) {
         printError("Connection failed\n");
         return;
     }

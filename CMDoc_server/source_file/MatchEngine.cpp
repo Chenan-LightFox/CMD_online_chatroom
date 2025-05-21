@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <locale>
 #include <queue>
 #include <stdexcept>
 #include <stdint.h>
@@ -15,7 +16,7 @@
 
 MatchEngine::MatchEngine(std::string dictFileName) {
     std::ifstream dictFile(dictFileName);
-    setlocale(LC_ALL, "chs");
+    setlocale(LC_ALL, "zh_CN");
     if (!dictFile) {
         throw std::runtime_error("Failed to open dictionary file");
     }
@@ -27,7 +28,9 @@ MatchEngine::MatchEngine(std::string dictFileName) {
 }
 
 std::wstring string2wstring(const std::string &str) {
-    auto wStr = std::filesystem::path(str).wstring();
+    std::filesystem::path path{str, std::locale("zh_CN")};
+    auto wStr = path.wstring();
+    // auto wStr = std::filesystem::path(str).wstring();
     return wStr;
 }
 

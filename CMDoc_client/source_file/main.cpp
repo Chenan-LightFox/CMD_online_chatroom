@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <ws2tcpip.h>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -27,6 +28,7 @@ int main() {
     }
     std::cout << "\n\t\t\tEnter Password:";
     std::cin >> passWord;
+
     ChatClient client("127.0.0.1", 8088, userName);
     std::thread saveThread(ChatHistory::saveHistory, "history.dat");
     saveThread.detach();
