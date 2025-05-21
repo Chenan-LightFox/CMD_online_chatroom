@@ -2,7 +2,6 @@
 
 #include "MessagePacket.h"
 #include "User.h"
-#include <iostream>
 #include <mutex>
 #include <set>
 #include <string>
@@ -17,7 +16,7 @@ class ChatRoom {
     std::vector<double> features;
     std::vector<MessagePacket> messages;
     std::mutex messageMutex;
-    ChatRoom(std::string name) : roomName(name) {}
+    ChatRoom(const std::string &name) : roomName(name) {}
     ChatRoom(const ChatRoom &room) {
         roomName = room.roomName;
         users = room.users;

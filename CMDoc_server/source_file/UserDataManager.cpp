@@ -1,5 +1,6 @@
 #include "../header_file/UserDataManager.h"
 #include <filesystem>
+#include <fstream>
 
 namespace fs = std::filesystem; // Only available in C++17 and later
 

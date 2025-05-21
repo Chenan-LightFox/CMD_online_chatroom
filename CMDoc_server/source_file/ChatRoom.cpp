@@ -32,8 +32,8 @@ void ChatRoom::getRoomFeatures(int featureSize, std::vector<User *> &users) {
         for (int i = 0; i < features.size(); i++)
             features[i] += user->features[i] * msgCount[user->username];
     }
-    for (int i = 0; i < features.size(); i++) {
-        features[i] /= totMsg;
+    for (double &feature : features) {
+        feature /= totMsg;
     }
 }
 
@@ -113,6 +113,7 @@ void ChatRoom::loadRoomList() {
 std::vector<std::string> ChatRoom::getRoomNames() {
     std::lock_guard<std::mutex> lock(roomMutex);
     std::vector<std::string> names;
+    names.reserve(rooms.size());
     for (auto room : rooms)
         names.push_back(room->roomName);
     return names;

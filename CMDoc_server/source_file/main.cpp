@@ -3,7 +3,6 @@
 #include "../header_file/PrintLog.h"
 #include "../header_file/ServerCommand.h"
 
-
 #pragma comment(lib, "ws2_32.lib")
 std::mutex cout_mutex;
 

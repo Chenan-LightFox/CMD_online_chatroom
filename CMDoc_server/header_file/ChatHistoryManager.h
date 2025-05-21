@@ -1,9 +1,7 @@
 #pragma once
 
 #include "Chatroom.h"
-#include "MessagePacket.h"
-#include <mutex>
-#include <queue>
+#include <map>
 #include <string>
 
 class ChatHistoryManager {

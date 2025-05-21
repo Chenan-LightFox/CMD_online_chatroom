@@ -2,17 +2,16 @@
 #include "../header_file/PrintLog.h"
 #include <conio.h>
 #include <cstring>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <minwindef.h>
 #include <mutex>
 #include <rpcndr.h>
 #include <string>
 #include <synchapi.h>
+#include <windows.h>
 #include <winuser.h>
 
-Screen::Screen(std::string userName, short width, short height,
+Screen::Screen(const std::string &userName, short width, short height,
                double messageHeight)
     : width(width), height(height), messageHeight(messageHeight),
       userName(userName), bufMsg(0) {
@@ -136,4 +135,3 @@ void Screen::draw() {
         Sleep(10);
     }
 }
-void Screen::setBufMsg() { int ch; }
