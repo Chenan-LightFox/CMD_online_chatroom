@@ -1,7 +1,6 @@
 #include "../header_file/MatchEngine.h"
-#include "../header_file/PrintLog.h"
+#include <cmath>
 #include <cwctype>
-#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -14,7 +13,9 @@
 #include <vector>
 #include <windows.h>
 
-MatchEngine::MatchEngine(std::string dictFileName) {
+using std::min, std::max;
+
+MatchEngine::MatchEngine(const std::string &dictFileName) {
     std::ifstream dictFile(dictFileName);
     setlocale(LC_ALL, "zh_CN");
     if (!dictFile) {
@@ -114,7 +115,7 @@ std::vector<std::wstring> Tokenizer::fmmTokenizer(const std::wstring &str) {
     return tokens;
 }
 FeatureExtractor::FeatureExtractor(Tokenizer tokenizer, int n)
-    : tokenizer(tokenizer), n(n) {
+    : tokenizer(std::move(tokenizer)), n(n) {
     const std::string allFeaturesStr[] = {
         "interAvgReplyHour", "interReplyFreq", "vocRichness",    "senLenAvg",
         "senLenVar",         "punRate",        "punQuesMarkRate"};
@@ -239,6 +240,7 @@ void FeatureExtractor::punctuationLevel(
 void FeatureExtractor::initTopFreq(const std::vector<std::string> &chats) {
     std::vector<std::wstring> wChats;
     std::map<std::wstring, int> wordFreq;
+    wChats.reserve(chats.size());
     for (auto chat : chats)
         wChats.push_back(string2wstring(chat));
     for (auto &line : wChats) {
@@ -325,5 +327,7 @@ double Similarity::cosineSimilarity(const std::vector<double> &v1,
         norm1 += v1[i] * v1[i];
         norm2 += v2[i] * v2[i];
     }
-    return (norm1 && norm2) ? dot / (sqrt(norm1) * sqrt(norm2)) : 0.0;
+    return (norm1 != 0.0 && norm2 != 0.0)
+               ? dot / (std::sqrt(norm1) * std::sqrt(norm2))
+               : 0.0;
 }

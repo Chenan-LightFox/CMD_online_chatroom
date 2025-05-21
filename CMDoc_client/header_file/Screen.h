@@ -1,7 +1,6 @@
 #pragma once
 #include "MessagePacket.h"
 #include <mutex>
-#include <queue>
 #include <stack>
 #include <string>
 #include <windows.h>
@@ -16,6 +15,7 @@ class Screen {
     HANDLE hOutput;
     HANDLE hOutBuf;
     COORD coord;
+    int bufMsg;
     short width;
     short height;
     double messageHeight;
@@ -23,9 +23,15 @@ class Screen {
     std::string userName;
 
   public:
-    int bufMsg;
-    Screen(std::string userName, short width, short height,
+    Screen(const std::string &userName, short width, short height,
            double messageHeight = 0.7);
     void draw();
-    void setBufMsg();
+    inline const int getBufMsg() const { return bufMsg; }
+    inline void setBufMsg(int new_bufMsg) { bufMsg = new_bufMsg; }
+    inline void decrementBufMsg() {
+        if (bufMsg > 0) {
+            bufMsg--;
+        }
+    }
+    inline void incrementBufMsg() { bufMsg++; }
 };

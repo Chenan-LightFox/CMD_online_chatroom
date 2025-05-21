@@ -4,15 +4,15 @@
 #include "../header_file/MatchEngine.h"
 #include "../header_file/UserDataManager.h"
 #include "../header_file/printLog.h"
-#include <cmath>
+#include <algorithm>
 #include <functional>
-#include <memory>
 #include <mutex>
+#include <sstream>
 #include <string.h>
 #include <string>
-#include <synchapi.h>
 #include <utility>
 #include <vector>
+#include <windows.h>
 
 extern std::mutex cout_mutex;
 std::vector<ChatRoom *> rooms;

@@ -53,18 +53,18 @@ int main() {
                 if (_kbhit()) {
                     ch = _getch();
                     if (ch == 72)
-                        screen.bufMsg++;
-                    if (ch == 80 && screen.bufMsg > 0)
-                        screen.bufMsg--;
+                        screen.incrementBufMsg();
+                    if (ch == 80 && screen.getBufMsg() > 0)
+                        screen.decrementBufMsg();
                     if (ch == 27)
                         break;
                 }
                 Sleep(50);
             }
-            screen.bufMsg = 0;
+            screen.setBufMsg(0);
             continue;
         }
-        screen.bufMsg = 0;
+        screen.setBufMsg(0);
         MessagePacket package{userName, message};
         client.sendPackage(package);
     }

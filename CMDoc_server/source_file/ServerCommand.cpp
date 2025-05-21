@@ -1,6 +1,7 @@
 #include "../header_file/ServerCommand.h"
 #include "../header_file/Chatroom.h"
 #include "../header_file/PrintLog.h"
+#include <sstream>
 #include <string>
 void HelpCommand::execute(const std::string &cmd, ChatServer &server) {
     printInfo("Available commands:\n"
