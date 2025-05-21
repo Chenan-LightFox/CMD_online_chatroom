@@ -1,9 +1,7 @@
 #pragma once
 
 #include "../header_file/ChatServer.h"
-#include <sstream>
 #include <string>
-
 
 class ServerCommand {
   public:
@@ -12,15 +10,15 @@ class ServerCommand {
 
 class HelpCommand : public ServerCommand {
   public:
-    void execute(const std::string &cmd, ChatServer &server);
+    void execute(const std::string &cmd, ChatServer &server) override;
 };
 
 class RoomCommand : public ServerCommand {
   public:
-    void execute(const std::string &cmd, ChatServer &server);
+    void execute(const std::string &cmd, ChatServer &server) override;
 };
 
 class StopCommand : public ServerCommand {
   public:
-    void execute(const std::string &cmd, ChatServer &server);
+    void execute(const std::string &cmd, ChatServer &server) override;
 };

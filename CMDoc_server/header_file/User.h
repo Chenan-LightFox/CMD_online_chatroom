@@ -1,9 +1,7 @@
 #pragma once
 
 #include "MessagePacket.h"
-#include <map>
 #include <mutex>
-#include <set>
 #include <string>
 #include <vector>
 #include <winsock2.h>
@@ -18,6 +16,6 @@ class User {
     std::mutex featureMutex;
     int joinedRoom = 0;
     bool isConnected;
-    User(std::string uname, std::string pwd)
-        : username(uname), password(pwd), isConnected(false) {}
+    User(const std::string &uname, const std::string &pwd)
+        : username(uname), password(pwd) {}
 };

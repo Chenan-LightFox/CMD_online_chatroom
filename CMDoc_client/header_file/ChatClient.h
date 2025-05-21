@@ -1,10 +1,9 @@
 #pragma once
 #include "../header_file/MessagePacket.h"
-#include <map>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <thread>
-#include <vector>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
@@ -18,8 +17,8 @@ class ChatClient {
     std::string userName;
 
   public:
-    ChatClient(std::string ip, int port, const std::string &userName)
-        : ip(ip), port(port), userName(userName) {};
+    ChatClient(const std::string &ip, short port, const std::string &userName)
+        : ip(ip), port(port), userName(userName){};
     ~ChatClient() {
         closesocket(clientSocket);
         WSACleanup();
@@ -27,7 +26,7 @@ class ChatClient {
 
     void start();
     void stop();
-    void sendPackage(MessagePacket packet) {
+    void sendPackage(MessagePacket packet) const {
         if (packet.content[0] == '\0' || packet.content[0] == '\n')
             return;
         int result = send(clientSocket, reinterpret_cast<char *>(&packet),

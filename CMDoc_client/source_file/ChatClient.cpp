@@ -1,7 +1,6 @@
 #include "../header_file/ChatClient.h"
 #include "../header_file/PrintLog.h"
 #include <mutex>
-#include <queue>
 #include <stack>
 #include <string>
 

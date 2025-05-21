@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Chatroom.h"
 #include "MessagePacket.h"
 #include "User.h"
 #include <map>
@@ -15,7 +14,7 @@ class MatchEngine {
     std::vector<std::string> dict;
 
   public:
-    MatchEngine(std::string dictFileName);
+    MatchEngine(const std::string &dictFileName);
     void getUsersFeature(std::vector<User *> users);
 };
 
