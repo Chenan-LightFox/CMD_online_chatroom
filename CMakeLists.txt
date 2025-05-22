@@ -1,4 +1,4 @@
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #对CMake版本进行限制
 cmake_minimum_required(VERSION 3.15)
  
