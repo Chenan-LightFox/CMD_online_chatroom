@@ -7,6 +7,15 @@
 std::mutex cout_mutex;
 
 int main() {
+    try {
+        std::locale test(".936");
+    } catch (...) {
+        std::cerr << "Failed to set locale \".936\"" << std::endl;
+        return 1;
+    }
+    std::setlocale(LC_ALL, ".936");
+    setlocale(LC_ALL, ".936");
+
     ChatServer server(8088); // todo: read port from config file
     std::thread serverThread([&server]() { server.start(); });
 

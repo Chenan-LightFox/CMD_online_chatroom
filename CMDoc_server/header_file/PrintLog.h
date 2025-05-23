@@ -35,3 +35,24 @@ inline void printError(const std::string &error) {
                             FOREGROUND_GREEN | FOREGROUND_RED |
                                 FOREGROUND_BLUE); // Set text color to white
 }
+
+inline void printDebug(const std::string &debug) {
+    std::lock_guard<std::mutex> lock(cout_mutex);
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole,
+                            FOREGROUND_GREEN); // Set text color to white
+    std::cout << "[SERVER_DEBUG]\t" << debug << std::endl;
+    SetConsoleTextAttribute(hConsole,
+                            FOREGROUND_GREEN | FOREGROUND_RED |
+                                FOREGROUND_BLUE); // Set text color to white
+}
+inline void printDebug(const std::wstring &debug) {
+    std::lock_guard<std::mutex> lock(cout_mutex);
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole,
+                            FOREGROUND_GREEN); // Set text color to white
+    std::wcout << "[SERVER_DEBUG]\t" << debug << std::endl;
+    SetConsoleTextAttribute(hConsole,
+                            FOREGROUND_GREEN | FOREGROUND_RED |
+                                FOREGROUND_BLUE); // Set text color to white
+}

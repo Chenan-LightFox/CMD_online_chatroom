@@ -5,7 +5,6 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
-#include <locale>
 #include <queue>
 #include <stdexcept>
 #include <stdint.h>
@@ -13,12 +12,12 @@
 #include <utility>
 #include <vector>
 #include <windows.h>
+#include "../header_file/PrintLog.h"
 
 using std::min, std::max;
 
 MatchEngine::MatchEngine(const std::string &dictFileName) {
     std::ifstream dictFile(dictFileName);
-    setlocale(LC_ALL, "zh-CN");
     if (!dictFile) {
         throw std::runtime_error("Failed to open dictionary file");
     }
@@ -30,13 +29,12 @@ MatchEngine::MatchEngine(const std::string &dictFileName) {
 }
 
 std::wstring string2wstring(const std::string &str) {
-    std::filesystem::path path{str, std::locale("C")};
-    auto wStr = path.wstring();
     // auto wStr = std::filesystem::path(str).wstring();
-    return wStr;
+    return std::filesystem::path(str).wstring();
 }
 
 void MatchEngine::getUsersFeature(std::vector<User *> users) {
+    printDebug("Start to extract features");
     Tokenizer tokenizer(dict);
     FeatureExtractor featureExtractor(tokenizer, 10);
     std::vector<std::string> chats;
@@ -49,11 +47,26 @@ void MatchEngine::getUsersFeature(std::vector<User *> users) {
         featureMaps.push_back(
             featureExtractor.extractFeatures(user->recentMessages));
     }
+
+    std::string featuresStr = "\nfeatures: \n";
+    for (auto feature : featureExtractor.allFeatures) {
+        featuresStr += feature + "\n";
+    }
+    printDebug(featuresStr);
+
     Normalizer::normalize(featureMaps, featureExtractor.allFeatures);
     for (int i = 0; i < users.size(); i++) {
         std::unique_lock<std::mutex> lock(users[i]->featureMutex);
         users[i]->features =
             Normalizer::toVector(featureMaps[i], featureExtractor.allFeatures);
+    }
+    for (int i = 0; i < users.size(); i++) {
+        printDebug(users[i]->username + " features: ");
+        std::string featuresStr;
+        for (int j = 0; j < users[i]->features.size(); j++) {
+            featuresStr += std::to_string(users[i]->features[j]) + " ";
+        }
+        printDebug(featuresStr);
     }
     return;
 }
@@ -90,11 +103,15 @@ std::vector<std::wstring> Tokenizer::fmmTokenizer(const std::wstring &str) {
         }
         if (str[pos] >= '0' && str[pos] <= '9') {
             std::wstring tok;
-            while (str[pos] < '0' && str[pos] > '9') {
+            while (str[pos] >= '0' && str[pos] <= '9') {
                 tok += str[pos];
                 pos++;
             }
             tokens.push_back(tok);
+            continue;
+        }
+        if (std::iswpunct(str[pos])) { // 标点符号
+            pos++;
             continue;
         }
         while (len > 0) {
@@ -120,7 +137,7 @@ FeatureExtractor::FeatureExtractor(Tokenizer tokenizer, int n)
     const std::string allFeaturesStr[] = {
         "interAvgReplyHour", "interReplyFreq", "vocRichness",    "senLenAvg",
         "senLenVar",         "punRate",        "punQuesMarkRate"};
-    for (int i = 0; i < n; i++)
+    for (int i = 1; i <= n; i++)
         allFeatures.push_back("vocTop" + std::to_string(i) + "FreqWord");
     for (auto i : allFeaturesStr)
         allFeatures.push_back(i);
@@ -178,8 +195,8 @@ void FeatureExtractor::vocabularyLevel(
     }
 
     // 关键词频率
-    for (int i = 0; i < topFreqWords.size(); i++) {
-        auto word = topFreqWords[i];
+    for (int i = 1; i <= topFreqWords.size(); i++) {
+        auto word = topFreqWords[topFreqWords.size() - i];
         if (wordFreq.find(word) != wordFreq.end())
             features["vocTop" + std::to_string(i) + "FreqWord"] =
                 (double)wordFreq.at(word) / totalWords;
@@ -239,6 +256,7 @@ void FeatureExtractor::punctuationLevel(
 }
 
 void FeatureExtractor::initTopFreq(const std::vector<std::string> &chats) {
+    printDebug("chats size: " + std::to_string(chats.size()));
     std::vector<std::wstring> wChats;
     std::map<std::wstring, int> wordFreq;
     wChats.reserve(chats.size());
@@ -276,6 +294,11 @@ void FeatureExtractor::initTopFreq(const std::vector<std::string> &chats) {
             topFreqWords.push_back(L"");
         }
     }
+    std::wstring topfreqWordsStr;
+    for (int i = 1; i <= topFreqWords.size(); i++)
+        topfreqWordsStr += topFreqWords[topFreqWords.size() - i] + L" ";
+    printDebug(L"Top " + std::to_wstring(n) + L" frequent words: \n" +
+               topfreqWordsStr);
     return;
 }
 

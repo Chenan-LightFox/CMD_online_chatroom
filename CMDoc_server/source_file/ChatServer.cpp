@@ -2,8 +2,8 @@
 #include "../header_file/ChatHistoryManager.h"
 #include "../header_file/Chatroom.h"
 #include "../header_file/MatchEngine.h"
+#include "../header_file/PrintLog.h"
 #include "../header_file/UserDataManager.h"
-#include "../header_file/printLog.h"
 #include <algorithm>
 #include <functional>
 #include <mutex>
@@ -103,7 +103,7 @@ list - List all rooms)");
     } else if (command == "/best-room") {
         std::vector<std::pair<double, std::string>> dist;
         for (int i = 0; i < rooms.size(); i++) {
-            std::cout << rooms[i]->features.size() << std::endl;
+            //            std::cout << rooms[i]->features.size() << std::endl;
             double sim = Similarity::cosineSimilarity(user->features,
                                                       rooms[i]->features);
             if (sim > 1 || sim < -1)
@@ -212,6 +212,11 @@ void ChatServer::handleClient(SOCKET clientSocket) {
     MessagePacket packet;
     int result = recv(clientSocket, reinterpret_cast<char *>(&packet),
                       sizeof(packet), 0);
+    if (result <= 0) {
+        printError("recv failed: " + std::to_string(WSAGetLastError()));
+        closesocket(clientSocket);
+        return;
+    }
     // Process the command
     std::string input(packet.content);
     std::istringstream iss(input);

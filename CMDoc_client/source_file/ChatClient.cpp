@@ -23,11 +23,16 @@ void ChatClient::receiveLoop(SOCKET clientSocket) {
     }
 }
 void ChatClient::start() {
-    PADDRINFOA addrInfo;
-    GetAddrInfoA(ip.c_str(), std::to_string(port).c_str(), nullptr, &addrInfo);
-
     WSADATA wsa;
     WSAStartup(MAKEWORD(2, 2), &wsa);
+
+    PADDRINFOA addrInfo;
+    int ret = GetAddrInfoA(ip.c_str(), std::to_string(port).c_str(), nullptr,
+                           &addrInfo);
+    if (ret != 0 || addrInfo == nullptr) {
+        printError("GetAddrInfoA failed\n");
+        return;
+    }
 
     clientSocket = socket(AF_INET, SOCK_STREAM, 0);
     addrInfo->ai_addr->sa_family = AF_INET;
