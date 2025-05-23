@@ -43,3 +43,6 @@
 *.log
 *.tlog
 *.pdb
+
+.vscode
+.cache

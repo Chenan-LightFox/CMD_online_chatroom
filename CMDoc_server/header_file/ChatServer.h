@@ -3,10 +3,7 @@
 #include "../header_file/MessagePacket.h"
 #include "../header_file/User.h"
 #include <atomic>
-#include <iostream>
 #include <map>
-#include <mutex>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -22,7 +19,7 @@ class ChatServer {
     std::map<SOCKET, User *> onlineUsers;
 
   public:
-    ChatServer(int _port) : port(_port) {};
+    ChatServer(int _port) : port(_port){};
 
     void start();
     void stop();

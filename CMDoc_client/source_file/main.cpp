@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <ws2tcpip.h>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -27,6 +28,7 @@ int main() {
     }
     std::cout << "\n\t\t\tEnter Password:";
     std::cin >> passWord;
+
     ChatClient client("127.0.0.1", 8088, userName);
     std::thread saveThread(ChatHistory::saveHistory, "history.dat");
     saveThread.detach();
@@ -51,18 +53,18 @@ int main() {
                 if (_kbhit()) {
                     ch = _getch();
                     if (ch == 72)
-                        screen.bufMsg++;
-                    if (ch == 80 && screen.bufMsg > 0)
-                        screen.bufMsg--;
+                        screen.incrementBufMsg();
+                    if (ch == 80 && screen.getBufMsg() > 0)
+                        screen.decrementBufMsg();
                     if (ch == 27)
                         break;
                 }
                 Sleep(50);
             }
-            screen.bufMsg = 0;
+            screen.setBufMsg(0);
             continue;
         }
-        screen.bufMsg = 0;
+        screen.setBufMsg(0);
         MessagePacket package{userName, message};
         client.sendPackage(package);
     }
