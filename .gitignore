@@ -46,3 +46,8 @@
 
 .vscode
 .cache
+*.recipe
+*.recipe
+*.exe
+*.dat
+*.txt
