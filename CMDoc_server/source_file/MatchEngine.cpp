@@ -34,7 +34,7 @@ std::wstring string2wstring(const std::string &str) {
 }
 
 void MatchEngine::getUsersFeature(std::vector<User *> users) {
-    printDebug("Start to extract features");
+    // printDebug("Start to extract features");
     Tokenizer tokenizer(dict);
     FeatureExtractor featureExtractor(tokenizer, 10);
     std::vector<std::string> chats;
@@ -52,7 +52,7 @@ void MatchEngine::getUsersFeature(std::vector<User *> users) {
     for (auto feature : featureExtractor.allFeatures) {
         featuresStr += feature + "\n";
     }
-    printDebug(featuresStr);
+    // printDebug(featuresStr);
 
     Normalizer::normalize(featureMaps, featureExtractor.allFeatures);
     for (int i = 0; i < users.size(); i++) {
@@ -61,12 +61,12 @@ void MatchEngine::getUsersFeature(std::vector<User *> users) {
             Normalizer::toVector(featureMaps[i], featureExtractor.allFeatures);
     }
     for (int i = 0; i < users.size(); i++) {
-        printDebug(users[i]->username + " features: ");
+        // printDebug(users[i]->username + " features: ");
         std::string featuresStr;
         for (int j = 0; j < users[i]->features.size(); j++) {
             featuresStr += std::to_string(users[i]->features[j]) + " ";
         }
-        printDebug(featuresStr);
+        // printDebug(featuresStr);
     }
     return;
 }
@@ -91,7 +91,7 @@ std::vector<std::wstring> Tokenizer::fmmTokenizer(const std::wstring &str) {
         size_t len = min(str.size() - pos, maxWordLen);
         std::wstring word;
         if (str[pos] <= 'Z' && str[pos] >= 'A' ||
-            str[pos] <= 'z' && str[pos] >= 'a') { // 英文单词
+            str[pos] <= 'z' && str[pos] >= 'a') { // English words
             std::wstring tok;
             while (str[pos] <= 'Z' && str[pos] >= 'A' ||
                    str[pos] <= 'z' && str[pos] >= 'a') {
@@ -110,7 +110,7 @@ std::vector<std::wstring> Tokenizer::fmmTokenizer(const std::wstring &str) {
             tokens.push_back(tok);
             continue;
         }
-        if (std::iswpunct(str[pos])) { // 标点符号
+        if (std::iswpunct(str[pos])) { // Punctuations
             pos++;
             continue;
         }
@@ -126,7 +126,7 @@ std::vector<std::wstring> Tokenizer::fmmTokenizer(const std::wstring &str) {
             tokens.push_back(word);
             pos += word.size();
         } else {
-            tokens.push_back(str.substr(pos, 1)); // 单字切分
+            tokens.push_back(str.substr(pos, 1)); // Word cutting
             pos++;
         }
     }
@@ -194,7 +194,7 @@ void FeatureExtractor::vocabularyLevel(
         }
     }
 
-    // 关键词频率
+    // Word frequency
     for (int i = 1; i <= topFreqWords.size(); i++) {
         auto word = topFreqWords[topFreqWords.size() - i];
         if (wordFreq.find(word) != wordFreq.end())
@@ -256,7 +256,7 @@ void FeatureExtractor::punctuationLevel(
 }
 
 void FeatureExtractor::initTopFreq(const std::vector<std::string> &chats) {
-    printDebug("chats size: " + std::to_string(chats.size()));
+    // printDebug("chats size: " + std::to_string(chats.size()));
     std::vector<std::wstring> wChats;
     std::map<std::wstring, int> wordFreq;
     wChats.reserve(chats.size());
@@ -290,19 +290,19 @@ void FeatureExtractor::initTopFreq(const std::vector<std::string> &chats) {
         topFreq.pop();
     }
     if (topFreqWords.size() < n) {
-        for (int i = topFreqWords.size(); i < n; i++) {
+        for (size_t i = topFreqWords.size(); i < n; i++) {
             topFreqWords.push_back(L"");
         }
     }
     std::wstring topfreqWordsStr;
     for (int i = 1; i <= topFreqWords.size(); i++)
         topfreqWordsStr += topFreqWords[topFreqWords.size() - i] + L" ";
-    printDebug(L"Top " + std::to_wstring(n) + L" frequent words: \n" +
-               topfreqWordsStr);
+    // printDebug(L"Top " + std::to_wstring(n) + L" frequent words: \n" +
+    //           topfreqWordsStr);
     return;
 }
 
-void Normalizer::normalize(
+void Normalizer::normalize(  
     std::vector<std::map<std::string, double>> &featureMaps,
     const std::vector<std::string> &allFeatures) {
     std::map<std::string, double> min_val, max_val;
@@ -318,7 +318,7 @@ void Normalizer::normalize(
         }
     }
 
-    for (auto &vec : featureMaps) { // 标准化
+    for (auto &vec : featureMaps) { // Standarlize
         for (const auto &f : allFeatures) {
             if (vec.find(f) != vec.end() && max_val[f] != min_val[f]) {
                 vec[f] = (vec[f] - min_val[f]) / (max_val[f] - min_val[f]);

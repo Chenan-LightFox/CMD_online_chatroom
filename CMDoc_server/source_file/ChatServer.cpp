@@ -31,10 +31,13 @@ void ChatServer::handleClientCommand(std::string &command,
     User *user = onlineUsers[clientSocket];
     // Handle the command
     if (command == "/help") {
-        serverMessage(clientSocket,
-                      "Available commands:\n/help - show this help\n/usrname "
-                      "- display your username\n");
-        printInfo(user->username + "executed command /help");
+        serverMessage(clientSocket,R"(Available commands:
+/best-room - find the best room based on your features
+/features - find similar users based on features
+/help - show this help
+/room - manage chat rooms
+/usrname - display your username)");
+        printInfo(user->username + " executed command /help");
     } else if (command == "/usrname") {
         serverMessage(clientSocket, "You are: " + user->username + "\n");
         printInfo(user->username + " executed command /usrname");
@@ -51,14 +54,17 @@ void ChatServer::handleClientCommand(std::string &command,
                 return;
             }
             ChatRoom::createRoom(roomName);
+            printInfo(user->username + " executed command /room create " + roomName);
         } else if (argu == "list") {
             std::string roomName;
             iss >> roomName;
             if (roomName.empty()) {
                 serverMessage(clientSocket, ChatRoom::listRooms());
+                printInfo(user->username + " executed command /room list");
                 return;
             }
             ChatRoom::getRoomMembers(roomName);
+            printInfo(user->username + " executed command /room list " + roomName);
         } else if (argu == "join") {
             std::string roomName;
             iss >> roomName;
@@ -72,6 +78,7 @@ void ChatServer::handleClientCommand(std::string &command,
             }
             user->joinedRoom = ChatRoom::roomExists(roomName);
             rooms[user->joinedRoom]->users.insert(user);
+            printInfo(user->username + " executed command /room join " + roomName);
         } else {
             serverMessage(clientSocket, R"(Not enough parameters!
 Available commands:
@@ -119,9 +126,7 @@ list - List all rooms)");
         }
         serverMessage(clientSocket, result);
         printInfo(user->username + " executed command /best-room");
-    }
-
-    else {
+    } else {
         serverMessage(clientSocket, "Unknown command.\n");
         printInfo(user->username + " sent an unknown command: " + command);
     }
@@ -204,10 +209,6 @@ void ChatServer::start() {
 }
 
 void ChatServer::handleClient(SOCKET clientSocket) {
-    // Send message when the client connects
-    serverMessage(clientSocket,
-                  "Welcome! Please register or login.\nType '/register' or "
-                  "'/login':\nType '/help' for help.\n");
     printInfo("A new client connected successfully.");
     MessagePacket packet;
     int result = recv(clientSocket, reinterpret_cast<char *>(&packet),
@@ -244,6 +245,14 @@ void ChatServer::handleClient(SOCKET clientSocket) {
             serverMessage(clientSocket, "Invalid username or password.\n");
             closesocket(clientSocket);
             return;
+        }
+        for (const auto &pair : onlineUsers) { // Check if the user is already logged in
+            if (pair.second->username == username) {
+                serverMessage(clientSocket,
+                              "User already logged in from another client.");
+                closesocket(clientSocket);
+                return;
+            }
         }
         onlineUsers[clientSocket] = registeredUsers[username];
         serverMessage(clientSocket, "Login successful.\n");
